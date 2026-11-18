@@ -192,7 +192,8 @@
     $("krChg").innerHTML = `<span class="${signCls(chg)}">${sPct(chg)}</span>`;
     const dayRatio = TM.totalBuyRatio(slots);
     $("krBuy").textContent = pct(dayRatio);
-    $("krBuy5").textContent = pct(last.ratio);
+    const lastWithVol = slots.slice().reverse().find((s) => s.ratio !== null);
+    $("krBuy5").textContent = pct(lastWithVol ? lastWithVol.ratio : null);
     setBar("krBarB", "krBarS", dayRatio, "매수", "매도");
 
     const labels = slots.map((s) => TM.kstHM(s.ts));
