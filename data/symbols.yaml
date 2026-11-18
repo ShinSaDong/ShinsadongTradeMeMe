@@ -2,9 +2,10 @@
 # krx: 국내 종목코드 (6자리)
 # binance: 바이낸스 USDⓈ-M 무기한 선물 심볼. 상장 안 됐으면 비워두고 detect 에 키워드를 넣으면
 #          페이지가 열릴 때 바이낸스 exchangeInfo 에서 자동으로 찾아 연결합니다.
-# 2026-11-18 기준 바이낸스 exchangeInfo 에서 TRADING 상태 확인된 국내 종목:
-#   SAMSUNGUSDT, SKHYNIXUSDT, HYUNDAIUSDT, LGELECTRONICSUSDT, NAVERUSDT, SAMSUNGEMUSDT
-#   (지수/ETF형: EWYUSDT, KORUUSDT / 홍콩 2배 레버리지 ETF형: CSOPSAMSUNG2LUSDT, CSOPSKHYNIX2LUSDT)
+# 2026-11-18 기준 바이낸스 exchangeInfo 의 underlyingType = KR_EQUITY 전체 (8개):
+#   SKHYNIXUSDT, SAMSUNGUSDT, HYUNDAIUSDT (2026-06-02 상장)
+#   SAMSUNGEMUSDT, HANMIUSDT, LGELECTRONICSUSDT, NAVERUSDT, KODEX200USDT (2026-08-14 상장)
+# 국내 관련 해외 상장 상품: EWYUSDT, KORUUSDT, SKHYUSDT, SKUUUSDT, SKDDUSDT (미국), CSOPSAMSUNG2LUSDT, CSOPSKHYNIX2LUSDT (홍콩)
 - name: 삼성전자
   krx: "005930"
   binance: SAMSUNGUSDT
@@ -23,6 +24,12 @@
 - name: 삼성전기
   krx: "009150"
   binance: SAMSUNGEMUSDT
+- name: 한미반도체
+  krx: "042700"
+  binance: HANMIUSDT
+- name: KODEX 200
+  krx: "069500"
+  binance: KODEX200USDT
 - name: LG에너지솔루션
   krx: "373220"
   binance: ""
