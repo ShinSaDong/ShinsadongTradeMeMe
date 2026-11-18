@@ -1,0 +1,79 @@
+{{ define "main" }}
+<div class="dash-head">
+  <div>
+    <h1>바이낸스 롱/숏 vs 국내 장 수급</h1>
+    <div class="dash-meta">5분 단위 · 5분마다 자동 갱신 · 마지막 갱신 <span id="lastUpdated">-</span></div>
+  </div>
+  <button class="tab" id="refreshBtn" type="button">지금 새로고침</button>
+</div>
+
+<div class="notice">
+  바이낸스 데이터는 접속하신 브라우저에서 바이낸스 공개 API로 직접 가져옵니다. 국내 매수·매도 비율은 1분 봉 가격 방향(틱 규칙)으로 나눈 <b>추정치</b>이며, 투자자별 수급은 거래일 기준입니다. 투자 참고용이며 투자 권유가 아닙니다.
+</div>
+
+<div class="summary-grid" id="summaryGrid"></div>
+
+{{ partial "ad.html" . }}
+
+<div class="tabs" id="symbolTabs"></div>
+
+<div class="compare-grid">
+  <section class="card binance">
+    <h2>바이낸스 무기한 선물 <span id="bnSymbol" class="sub"></span></h2>
+    <div class="sub">최근 24시간 · 5분 · KST</div>
+    <div id="bnBody">
+      <div class="kpis">
+        <div class="kpi"><div class="label">가격 (USDT)</div><div class="value" id="bnPrice">-</div></div>
+        <div class="kpi"><div class="label">롱 계정 비율</div><div class="value" id="bnLong">-</div></div>
+        <div class="kpi"><div class="label">상위 트레이더 롱</div><div class="value" id="bnTop">-</div></div>
+        <div class="kpi"><div class="label">테이커 매수 비율</div><div class="value" id="bnTaker">-</div></div>
+      </div>
+      <div class="ratio-bar"><div class="l" id="bnBarL">롱</div><div class="s" id="bnBarS">숏</div></div>
+      <div class="chart-box"><canvas id="bnPriceChart"></canvas></div>
+      <div class="chart-box small"><canvas id="bnRatioChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="card krx">
+    <h2>국내 장 (KRX) <span id="krCode" class="sub"></span></h2>
+    <div class="sub" id="krDateLabel">정규장 09:00~15:30 · 5분 · KST</div>
+    <div id="krBody">
+      <div class="kpis">
+        <div class="kpi"><div class="label">현재가 (원)</div><div class="value" id="krPrice">-</div></div>
+        <div class="kpi"><div class="label">등락률</div><div class="value" id="krChg">-</div></div>
+        <div class="kpi"><div class="label">당일 매수 체결 비율</div><div class="value" id="krBuy">-</div></div>
+        <div class="kpi"><div class="label">최근 5분 매수 비율</div><div class="value" id="krBuy5">-</div></div>
+      </div>
+      <div class="ratio-bar"><div class="b" id="krBarB">매수</div><div class="d" id="krBarS">매도</div></div>
+      <div class="chart-box"><canvas id="krPriceChart"></canvas></div>
+      <div class="chart-box small"><canvas id="krRatioChart"></canvas></div>
+    </div>
+  </section>
+</div>
+
+<section class="card">
+  <h2>5분 비교표</h2>
+  <div class="sub" id="cmpSub">국내 정규장 시간대의 같은 5분 구간을 나란히 비교합니다. 매수 비율이 50%를 넘으면 매수 우위로 봅니다.</div>
+  <div class="kpis" id="cmpStats"></div>
+  <div class="table-wrap"><table class="data" id="cmpTable"></table></div>
+  <div class="legend-note">
+    <span class="agree">같은 방향</span>: 바이낸스 테이커와 국내 체결이 모두 매수 우위(또는 모두 매도 우위) ·
+    <span class="diverge">엇갈림</span>: 한쪽만 매수 우위 · 등락률은 각 시장의 그날 첫 5분 봉 대비입니다.
+  </div>
+</section>
+
+<section class="card">
+  <h2>개인 · 외국인 · 기관 수급</h2>
+  <div class="sub">거래일별 순매수 수량(주) · 최근 20거래일</div>
+  <div class="chart-box"><canvas id="flowChart"></canvas></div>
+  <div class="table-wrap"><table class="data" id="flowTable"></table></div>
+</section>
+
+<script id="symbols-data" type="application/json">{{ site.Data.symbols | jsonify | safeJS }}</script>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.js"></script>
+<script src="{{ "js/analysis.js" | relURL }}"></script>
+<script src="{{ "js/dashboard.js" | relURL }}"></script>
+{{ end }}

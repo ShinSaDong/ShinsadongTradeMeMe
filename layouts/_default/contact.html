@@ -1,0 +1,10 @@
+{{ define "mainclass" }}narrow{{ end }}
+{{ define "main" }}
+<article class="post">
+  <h1>{{ .Title }}</h1>
+  <div class="post-body">
+    {{ .Content }}
+    <p>📧 <a href="mailto:{{ site.Params.contactEmail }}">{{ site.Params.contactEmail }}</a></p>
+  </div>
+</article>
+{{ end }}

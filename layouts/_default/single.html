@@ -1,0 +1,9 @@
+{{ define "main" }}
+<article class="post">
+  <h1>{{ .Title }}</h1>
+  {{ if eq .Section "posts" }}<time class="post-date">{{ .Date.Format "2006-01-02" }}</time>{{ end }}
+  {{ partial "ad.html" . }}
+  <div class="post-body">{{ .Content }}</div>
+  {{ partial "ad.html" . }}
+</article>
+{{ end }}

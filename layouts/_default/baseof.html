@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
+  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
+  <link rel="canonical" href="{{ .Permalink }}">
+  <meta property="og:title" content="{{ .Title }}">
+  <meta property="og:site_name" content="{{ site.Title }}">
+  <meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
+  <meta property="og:url" content="{{ .Permalink }}">
+  {{ with resources.Get "css/style.css" }}{{ end }}
+  <link rel="stylesheet" href="{{ "css/style.css" | relURL }}">
+  {{ range .AlternativeOutputFormats -}}
+  {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink site.Title | safeHTML }}
+  {{ end -}}
+  {{ with site.Params.adsenseClient }}
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ . }}" crossorigin="anonymous"></script>
+  {{ end }}
+  {{ block "head" . }}{{ end }}
+</head>
+<body>
+  {{ partial "header.html" . }}
+  <main class="container {{ block "mainclass" . }}{{ end }}">
+    {{ block "main" . }}{{ end }}
+  </main>
+  {{ partial "footer.html" . }}
+  {{ block "scripts" . }}{{ end }}
+</body>
+</html>
