@@ -322,12 +322,14 @@
   }
 
   async function loadSelected() {
+    const seq = (state.loadSeq = (state.loadSeq || 0) + 1);
     const sym = SYMBOLS[state.selected];
     const [kr, bn, inv] = await Promise.all([
       loadKrMinute(sym.krx).catch((e) => ({ error: e.message })),
       sym.bnResolved ? loadBinance(sym.bnResolved).catch(() => { sym.bnStatus = "error"; return null; }) : Promise.resolve(null),
       loadKrInvestor(sym.krx).catch((e) => ({ error: e.message })),
     ]);
+    if (seq !== state.loadSeq) return; // 그 사이 다른 종목을 눌렀으면 이전 결과는 버림
     const slots = kr && !kr.error ? TM.tickRuleFiveMin(kr.bars || []) : [];
     renderBinance(sym, bn);
     renderKr(sym, kr, slots);
