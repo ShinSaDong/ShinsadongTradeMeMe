@@ -69,6 +69,7 @@
   <div class="table-wrap"><table class="data" id="flowTable"></table></div>
 </section>
 
+<script>window.TM_CONFIG = { krMode: "{{ site.Params.krDataMode | default "api" }}", krStaticBase: "{{ "data/kr/" | relURL }}" };</script>
 <script id="symbols-data" type="application/json">{{ site.Data.symbols | jsonify | safeJS }}</script>
 {{ end }}
 

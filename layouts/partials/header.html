@@ -1,10 +1,11 @@
 <header class="site-header">
   <div class="container header-inner">
-    <a class="logo" href="{{ "/" | relURL }}">Shinsadong<span>TradeMeMe</span></a>
+    <a class="logo" href="{{ site.Home.RelPermalink }}">Shinsadong<span>TradeMeMe</span></a>
     <nav>
       {{ $current := . }}
       {{ range site.Menus.main }}
-      <a href="{{ .URL | relURL }}" {{ if or ($current.IsMenuCurrent "main" .) (hasPrefix $current.RelPermalink .URL) }}class="active"{{ end }}>{{ .Name }}</a>
+      {{ $href := .URL }}
+      <a href="{{ $href }}" {{ if hasPrefix $current.RelPermalink $href }}class="active"{{ end }}>{{ .Name }}</a>
       {{ end }}
     </nav>
   </div>

@@ -33,6 +33,7 @@
     try {
       return await getJSON(`${BN}${path}?${qs}`);
     } catch (e) {
+      if ((window.TM_CONFIG || {}).krMode === "static") throw e; // GitHub Pages 에는 예비 프록시가 없음
       return await getJSON(`/api/binance?path=${encodeURIComponent(path)}&${qs}`);
     }
   }
@@ -72,8 +73,17 @@
     return { klines: TM.normKlines(klines), global: TM.normLS(global), top: TM.normLS(top), taker: TM.normTaker(taker) };
   }
 
-  const loadKrMinute = (code) => getJSON(`/api/kr?code=${code}&type=minute`);
-  const loadKrInvestor = (code) => getJSON(`/api/kr?code=${code}&type=investor`);
+  // 국내 데이터: Cloudflare 에서는 /api/kr 함수, GitHub Pages 에서는 빌드 때 받아둔 정적 JSON
+  const CFG = window.TM_CONFIG || { krMode: "api" };
+  async function loadKr(code, type) {
+    const data = CFG.krMode === "static"
+      ? await getJSON(`${CFG.krStaticBase}${code}-${type}.json?t=${Math.floor(Date.now() / 60000)}`)
+      : await getJSON(`/api/kr?code=${code}&type=${type}`);
+    if (data && data.error) throw new Error(data.error);
+    return data;
+  }
+  const loadKrMinute = (code) => loadKr(code, "minute");
+  const loadKrInvestor = (code) => loadKr(code, "investor");
 
   // ---------- 차트 ----------
   const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -173,7 +183,8 @@
     body.querySelectorAll(".chart-box, .kpis, .ratio-bar").forEach((el) => (el.style.display = ""));
     const e = body.querySelector(".empty"); if (e) e.remove();
 
-    $("krDateLabel").textContent = `${fmtDate(kr.date)} 정규장 · 5분 · KST`;
+    const asOf = kr.fetchedAt ? ` · 데이터 기준 ${new Date(kr.fetchedAt).toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour12: false, hour: "2-digit", minute: "2-digit" })}` : "";
+    $("krDateLabel").textContent = `${fmtDate(kr.date)} 정규장 · 5분 · KST${asOf}`;
     const last = slots[slots.length - 1];
     const basic = kr.basic || {};
     $("krPrice").textContent = num(basic.price ?? last.close);

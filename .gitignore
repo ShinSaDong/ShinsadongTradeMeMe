@@ -4,3 +4,4 @@ resources/_gen/
 node_modules/
 .wrangler/
 .DS_Store
+static/data/kr/

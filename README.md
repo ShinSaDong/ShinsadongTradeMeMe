@@ -34,6 +34,14 @@ lib/naver.js        네이버 응답 파싱 (소스 2개씩, 자동 폴백)
 - 국내 **매수·매도 비율은 추정치**입니다. 1분 봉 종가가 직전보다 오르면 매수 주도, 내리면 매도 주도로 보고 거래량을 나눕니다(틱 규칙). 증권사 체결강도와 비슷한 개념입니다.
 - 바이낸스에 새 국내 종목이 상장되면 `data/symbols.yaml`의 `detect` 키워드로 자동 연결됩니다.
 
+## GitHub Pages로 먼저 보기 (테스트용)
+
+- 주소: https://shinsadong.github.io/ShinsadongTradeMeMe/
+- `.github/workflows/pages.yml`이 main에 push할 때마다, 그리고 평일 장중에는 5분마다 자동으로 빌드·배포합니다.
+- GitHub Pages는 서버 함수가 없어서, 국내 데이터는 배포할 때 `scripts/fetch-kr.mjs`가 미리 받아 정적 JSON으로 넣습니다. 그래서 국내 데이터는 **5~15분 정도 늦을 수 있습니다** (GitHub 예약 실행 지연). 바이낸스 데이터는 브라우저에서 실시간으로 받습니다.
+- 수동 갱신: GitHub 리포 → Actions → Deploy to GitHub Pages → Run workflow
+- Cloudflare로 옮기면 국내 데이터도 `/api/kr` 함수로 실시간 조회됩니다. 옮긴 뒤에는 워크플로를 꺼도 됩니다.
+
 ## Cloudflare Pages 배포
 
 1. Cloudflare 대시보드 → **Workers & Pages → Create → Pages → Connect to Git** → 이 리포 선택

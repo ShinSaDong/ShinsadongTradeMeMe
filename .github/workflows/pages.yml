@@ -1,0 +1,66 @@
+# GitHub Pages 배포
+# - main 에 push 할 때마다 배포
+# - 평일 장중(KST 09:00~15:59)에는 5분마다, 장 마감 후에는 몇 번 더 국내 데이터를 새로 받아 재배포
+#   (GitHub 예약 실행은 붐비면 5~15분 늦어질 수 있습니다)
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "*/5 0-6 * * 1-5"    # UTC 00~06시 = KST 09~15시
+    - cron: "20 7,8,9 * * 1-5"   # KST 16:20, 17:20, 18:20 (수급 확정치 반영)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  HUGO_VERSION: 0.139.4
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 국내 데이터 받기 (네이버 금융)
+        run: node scripts/fetch-kr.mjs static/data/kr
+        continue-on-error: true
+
+      - name: Hugo 설치
+        run: |
+          wget -q -O hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
+          sudo dpkg -i hugo.deb
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: 빌드
+        env:
+          HUGO_PARAMS_KRDATAMODE: static
+        run: hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
