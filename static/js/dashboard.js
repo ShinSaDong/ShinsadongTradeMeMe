@@ -184,7 +184,7 @@
     const e = body.querySelector(".empty"); if (e) e.remove();
 
     const asOf = kr.fetchedAt ? ` · 데이터 기준 ${new Date(kr.fetchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}` : "";
-    $("krDateLabel").textContent = `${fmtDate(kr.date)} 정규장 · 5분 · KST${asOf}`;
+    $("krDateLabel").textContent = `${fmtDate(kr.date)} · 08:00~20:00 · 5분 · KST${asOf}`;
     // 평일 장중인데 오늘 데이터가 아니거나 15분 넘게 지났으면 경고
     const nowK = new Date(Date.now() + 9 * 3600e3);
     const todayK = nowK.toISOString().slice(0, 10).replace(/-/g, "");
@@ -192,7 +192,7 @@
     const weekday = nowK.getUTCDay() >= 1 && nowK.getUTCDay() <= 5;
     const ageMin = kr.fetchedAt ? (Date.now() - kr.fetchedAt) / 60000 : 0;
     let warn = body.querySelector(".stale");
-    const stale = weekday && hm >= 905 && hm <= 1540 && (kr.date !== todayK || ageMin > 15);
+    const stale = weekday && hm >= 805 && hm <= 2010 && (kr.date !== todayK || ageMin > 15);
     if (stale) {
       if (!warn) { warn = document.createElement("div"); warn.className = "notice stale"; body.prepend(warn); }
       warn.textContent = kr.date !== todayK
