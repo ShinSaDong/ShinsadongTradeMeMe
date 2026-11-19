@@ -16,7 +16,8 @@ for (const code of codes) {
   try {
     const [minute, basic] = await Promise.all([fetchMinuteBars(code), fetchBasic(code)]);
     writeFileSync(`${outDir}/${code}-minute.json`, JSON.stringify({ code, ...minute, basic, fetchedAt: now }));
-    console.log(`✓ ${code} minute ${minute.date} ${minute.bars.length} bars (${minute.source})`);
+    const hm = (t) => new Date(t + 9 * 3600e3).toISOString().slice(11, 16);
+    console.log(`✓ ${code} minute ${minute.date} ${minute.bars.length} bars ${hm(minute.bars[0].ts)}~${hm(minute.bars.at(-1).ts)} (${minute.source})`);
     ok++;
   } catch (e) {
     writeFileSync(`${outDir}/${code}-minute.json`, JSON.stringify({ code, error: e.message, fetchedAt: now }));
