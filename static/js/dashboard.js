@@ -183,8 +183,22 @@
     body.querySelectorAll(".chart-box, .kpis, .ratio-bar").forEach((el) => (el.style.display = ""));
     const e = body.querySelector(".empty"); if (e) e.remove();
 
-    const asOf = kr.fetchedAt ? ` · 데이터 기준 ${new Date(kr.fetchedAt).toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour12: false, hour: "2-digit", minute: "2-digit" })}` : "";
+    const asOf = kr.fetchedAt ? ` · 데이터 기준 ${new Date(kr.fetchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}` : "";
     $("krDateLabel").textContent = `${fmtDate(kr.date)} 정규장 · 5분 · KST${asOf}`;
+    // 평일 장중인데 오늘 데이터가 아니거나 15분 넘게 지났으면 경고
+    const nowK = new Date(Date.now() + 9 * 3600e3);
+    const todayK = nowK.toISOString().slice(0, 10).replace(/-/g, "");
+    const hm = nowK.getUTCHours() * 100 + nowK.getUTCMinutes();
+    const weekday = nowK.getUTCDay() >= 1 && nowK.getUTCDay() <= 5;
+    const ageMin = kr.fetchedAt ? (Date.now() - kr.fetchedAt) / 60000 : 0;
+    let warn = body.querySelector(".stale");
+    const stale = weekday && hm >= 905 && hm <= 1540 && (kr.date !== todayK || ageMin > 15);
+    if (stale) {
+      if (!warn) { warn = document.createElement("div"); warn.className = "notice stale"; body.prepend(warn); }
+      warn.textContent = kr.date !== todayK
+        ? `⚠️ 국내 데이터가 아직 오늘 것으로 갱신되지 않았습니다 (현재 ${fmtDate(kr.date)} 기준).`
+        : `⚠️ 국내 데이터가 ${Math.round(ageMin)}분 전 기준입니다. 갱신이 지연되고 있습니다.`;
+    } else if (warn) warn.remove();
     const last = slots[slots.length - 1];
     const basic = kr.basic || {};
     $("krPrice").textContent = num(basic.price ?? last.close);
