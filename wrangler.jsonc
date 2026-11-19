@@ -1,0 +1,20 @@
+// Cloudflare Workers 배포 설정
+// - "name" 은 Cloudflare 대시보드의 Worker 이름과 같아야 합니다.
+// - wrangler deploy 가 먼저 build.command 로 Hugo 사이트를 public/ 에 만든 뒤 배포합니다.
+//   (Hugo 는 npm 패키지로 그때그때 받아서 쓰므로 대시보드에 HUGO_VERSION 을 넣을 필요가 없습니다)
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "shinsadongtradememe",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-01",
+  "build": {
+    "command": "npx --yes hugo-extended@0.139.4 --minify"
+  },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "workers_dev": true,
+  "observability": { "enabled": true }
+}
