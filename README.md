@@ -34,6 +34,14 @@ lib/naver.js        네이버 응답 파싱 (소스 2개씩, 자동 폴백)
 - 국내 **매수·매도 비율은 추정치**입니다. 1분 봉 종가가 직전보다 오르면 매수 주도, 내리면 매도 주도로 보고 거래량을 나눕니다(틱 규칙). 증권사 체결강도와 비슷한 개념입니다.
 - 바이낸스에 새 국내 종목이 상장되면 `data/symbols.yaml`의 `detect` 키워드로 자동 연결됩니다.
 
+## Cloudflare Workers 배포 (현재 운영)
+
+- 주소: https://shinsadongtradememe.sin8361.workers.dev
+- GitHub `main`에 push하면 Cloudflare Workers Builds가 자동으로 `npx wrangler deploy`를 실행합니다.
+- `wrangler.jsonc`의 `build.command`가 Hugo(npm `hugo-extended@0.139.4`)로 `public/`을 만들고, `worker/index.js`가 `/api/kr`, `/api/binance`를 처리합니다. 나머지는 정적 파일로 응답합니다.
+- 대시보드 Build command는 비워두고, Deploy command는 `npx wrangler deploy`로 둡니다. `HUGO_VERSION` 변수는 필요 없습니다.
+- Worker 이름(`wrangler.jsonc`의 `name`)은 대시보드의 Worker 이름 `shinsadongtradememe`와 같아야 합니다.
+
 ## GitHub Pages로 먼저 보기 (테스트용)
 
 - 주소: https://shinsadong.github.io/ShinsadongTradeMeMe/
