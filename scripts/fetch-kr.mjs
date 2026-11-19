@@ -34,23 +34,3 @@ for (const code of codes) {
 }
 console.log(`done: ${ok}/${codes.length} minute files`);
 
-// ---- 진단용: 네이버 원본 응답 일부를 저장 (data/kr/_debug.json) ----
-try {
-  const { NAVER_HEADERS } = await import("../lib/naver.js");
-  const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10).replace(/-/g, "");
-  const get = async (u) => {
-    try {
-      const r = await fetch(u, { headers: NAVER_HEADERS });
-      const t = await r.text();
-      return { status: r.status, len: t.length, head: t.slice(0, 1500), tail: t.slice(-600) };
-    } catch (e) { return { error: String(e) }; }
-  };
-  const dbg = {
-    at: new Date().toISOString(),
-    a_morning: await get(`https://api.stock.naver.com/chart/domestic/item/005930/minute?startDateTime=${day}0800&endDateTime=${day}1159`),
-    a_plain: await get(`https://api.stock.naver.com/chart/domestic/item/005930/minute`),
-    b: await get(`https://fchart.stock.naver.com/sise.nhn?symbol=005930&timeframe=minute&count=1500&requestType=0`),
-  };
-  writeFileSync(`${outDir}/_debug.json`, JSON.stringify(dbg, null, 1));
-  console.log("debug saved");
-} catch (e) { console.log("debug failed", e.message); }
