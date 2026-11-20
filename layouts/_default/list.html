@@ -6,7 +6,7 @@
   <li>
     <a href="{{ .RelPermalink }}">{{ .Title }}</a>
     <time>{{ .Date.Format "2006-01-02" }}</time>
-    <p>{{ .Summary | plainify | truncate 120 }}</p>
+    <p>{{ with .Description }}{{ . }}{{ else }}{{ .Summary | plainify | truncate 120 }}{{ end }}</p>
   </li>
   {{ end }}
 </ul>
