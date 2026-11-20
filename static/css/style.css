@@ -179,3 +179,36 @@ table.data tr.sum td { font-weight: 800; background: var(--panel-2); }
 .calc input { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); border-radius: 6px; padding: 8px; width: 150px; font-size: 14px; }
 .calc-out { font-size: 14px; flex-basis: 100%; }
 table.rules td { white-space: normal; text-align: left; min-width: 90px; }
+
+/* ===== 종합투자 ===== */
+.sel { background: var(--panel); border: 1px solid var(--line); color: var(--text); border-radius: 999px; padding: 7px 12px; font-weight: 600; }
+.mood-card { padding: 16px 20px; }
+.mood-head { display: flex; justify-content: space-between; align-items: end; }
+.mood-label { font-size: 26px; font-weight: 900; }
+.mood-score { font-size: 34px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.gauge { position: relative; height: 10px; border-radius: 6px; margin-top: 10px;
+  background: linear-gradient(90deg, #3e7bfa 0%, #2a303c 45%, #2a303c 55%, #e5484d 100%); }
+.gauge-mark { position: absolute; top: -5px; width: 4px; height: 20px; background: #fff; border-radius: 2px; transform: translateX(-2px); transition: left .4s; }
+.gauge-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
+.mk-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 900px) { .mk-cards { grid-template-columns: 1fr; } }
+.mk-card { margin-bottom: 4px; }
+.mk-top { display: flex; justify-content: space-between; align-items: center; }
+.mk-top h3 { margin: 0; font-size: 16px; }
+.mk-price { font-size: 22px; font-weight: 800; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
+.mk-price span { font-size: 15px; }
+.mk-row { display: flex; justify-content: space-between; font-size: 14px; padding: 3px 0; border-bottom: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+.mk-row span:first-child { color: var(--muted); }
+.mk-row.sm { font-size: 12px; }
+.story { padding-left: 18px; margin: 8px 0 14px; }
+.story li { margin-bottom: 8px; line-height: 1.6; }
+.parts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 16px; }
+.part { display: grid; grid-template-columns: 110px 1fr 40px; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+.part b { text-align: right; }
+.pbar { height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
+.pbar .pp { height: 100%; background: #e5484d; }
+.pbar .pn { height: 100%; background: #3e7bfa; }
+.chart-box.tall { height: 300px; }
+table.data .strong { font-weight: 900; }
+table.data .mid { font-weight: 700; }
+table.data .weak { opacity: .7; }

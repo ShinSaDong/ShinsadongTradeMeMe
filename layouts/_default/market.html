@@ -1,0 +1,94 @@
+{{ define "main" }}
+<div class="dash-head">
+  <div>
+    <h1>종합투자</h1>
+    <div class="dash-meta">코스피 · 코스닥 · 코스피200 선물 · 5분 수급 · 기준 <span id="mkAt">-</span></div>
+  </div>
+  <div class="sc-controls">
+    <select id="daySel" class="sel"></select>
+    <button type="button" class="tab" id="mkRefresh">새로고침</button>
+  </div>
+</div>
+
+<div class="notice">
+  수급은 네이버 금융의 장중 누적값을 <b>5분마다 저장</b>해 만든 것입니다(평일 08:55~16:35). 그래서 저장을 시작한 시점 이전 구간은 비어 있고, 저장이 밀리면 그 구간은 다음 5분과 합쳐집니다. 코스피·코스닥 단위는 억원, 선물은 네이버 표기 기준입니다. 투자 참고용이며 투자 권유가 아닙니다.
+</div>
+<div class="notice" id="mkStatic" hidden>이 주소(GitHub Pages)에서는 수급 저장 기능이 동작하지 않습니다. <a href="https://shinsadongtradememe.sin8361.workers.dev/market/">실시간 주소에서 열기 →</a></div>
+
+<section class="card mood-card">
+  <div class="mood-head">
+    <div>
+      <div class="sub">종합 시장 분위기</div>
+      <div class="mood-label" id="mdLabel">-</div>
+    </div>
+    <div class="mood-score" id="mdScore">-</div>
+  </div>
+  <div class="gauge"><div class="gauge-mark" id="mdMark"></div></div>
+  <div class="gauge-scale"><span>약세 −100</span><span>중립 0</span><span>강세 +100</span></div>
+</section>
+
+<div class="mk-cards" id="mkCards"></div>
+
+<div class="tabs" id="mkTabs">
+  <button type="button" class="tab active" data-m="KOSPI">코스피</button>
+  <button type="button" class="tab" data-m="KOSDAQ">코스닥</button>
+</div>
+
+<section class="card">
+  <h2 id="stTitle">수급 해석</h2>
+  <div class="sub" id="stSub"></div>
+  <ul class="story" id="story"></ul>
+  <div class="parts" id="parts"></div>
+</section>
+
+<div class="compare-grid">
+  <section class="card">
+    <h2>누적 수급과 지수</h2>
+    <div class="sub">개인·외국인·기관·프로그램 누적 순매수(억원, 왼쪽) · 지수(오른쪽)</div>
+    <div class="chart-box tall"><canvas id="cumChart"></canvas></div>
+  </section>
+  <section class="card">
+    <h2>5분 외국인 수급 vs 지수 등락</h2>
+    <div class="sub">막대: 5분 외국인 순매수 변화(억원) · 선: 5분 지수 등락률(%)</div>
+    <div class="chart-box tall"><canvas id="deltaChart"></canvas></div>
+  </section>
+</div>
+
+<section class="card">
+  <h2>수급 ↔ 지수 상관관계</h2>
+  <div class="sub">같은 5분: 그 5분 동안 수급 변화와 지수 등락이 얼마나 같이 움직였는지 · 5분 선행: 앞 5분 수급과 다음 5분 지수(먼저 움직이는 수급 찾기). ±0.7 이상 강함, ±0.4 이상 보통.</div>
+  <div class="table-wrap"><table class="data" id="corrTable"></table></div>
+</section>
+
+<section class="card">
+  <h2>5분 수급 표</h2>
+  <div class="sub">각 5분 동안의 순매수 변화(억원). 최신이 위.</div>
+  <div class="table-wrap"><table class="data" id="flowRows"></table></div>
+</section>
+
+<section class="card">
+  <h2>읽는 법</h2>
+  <div class="table-wrap">
+    <table class="data rules">
+      <thead><tr><th>상황</th><th>해석</th></tr></thead>
+      <tbody>
+        <tr><td>외국인 현물·선물 동반 매수</td><td>지수 상승에 무게를 둔 가장 강한 조합. 반대로 동반 매도는 가장 약한 조합입니다.</td></tr>
+        <tr><td>외국인 현물 매도 + 선물 매수</td><td>현물 매도를 선물로 헤지하거나 차익거래일 수 있어 방향성이 약합니다.</td></tr>
+        <tr><td>프로그램 비차익 대량 매도</td><td>외국인·기관이 대형주를 묶음(바스켓)으로 파는 것. 지수를 직접 누르는 힘이 큽니다.</td></tr>
+        <tr><td>개인만 순매수</td><td>외국인·기관 물량을 개인이 받아내는 구도. 하락장에서 반등이 약한 경우가 많습니다.</td></tr>
+        <tr><td>지수 상승 + 하락 종목 다수</td><td>일부 대형주 쏠림. 지수만 보고 개별 종목을 판단하면 안 되는 장입니다.</td></tr>
+        <tr><td>5분 선행 상관이 높은 수급</td><td>그 주체의 매매가 지수보다 먼저 움직이는 날. 해당 수급의 방향 전환을 먼저 확인하세요.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="legend-note">분위기 점수 구성: 외국인 현물 ±25, 프로그램 ±15, 선물 외국인 ±15(코스피), 지수 등락률 ±15, 상승·하락 종목 수 ±20, 기관 ±10. 종합 = 코스피 65% + 코스닥 35%.</div>
+</section>
+
+<script>window.TM_CONFIG = { krMode: "{{ site.Params.krDataMode | default "api" }}" };</script>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.js"></script>
+<script src="{{ "js/flow-engine.js" | relURL }}"></script>
+<script src="{{ "js/market.js" | relURL }}"></script>
+{{ end }}
