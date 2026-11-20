@@ -18,21 +18,25 @@ summaryLength = 40
 
 [menu]
   [[menu.main]]
+    name = "종합투자"
+    url = "/market/"
+    weight = 1
+  [[menu.main]]
     name = "대시보드"
     url = "/dashboard/"
-    weight = 1
+    weight = 2
   [[menu.main]]
     name = "단타"
     url = "/scalp/"
-    weight = 2
+    weight = 3
   [[menu.main]]
     name = "블로그"
     url = "/posts/"
-    weight = 3
+    weight = 4
   [[menu.main]]
     name = "소개"
     url = "/about/"
-    weight = 4
+    weight = 5
 
 [markup.goldmark.renderer]
   unsafe = true
