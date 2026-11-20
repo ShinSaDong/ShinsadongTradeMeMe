@@ -22,13 +22,17 @@ summaryLength = 40
     url = "/dashboard/"
     weight = 1
   [[menu.main]]
+    name = "단타"
+    url = "/scalp/"
+    weight = 2
+  [[menu.main]]
     name = "블로그"
     url = "/posts/"
-    weight = 2
+    weight = 3
   [[menu.main]]
     name = "소개"
     url = "/about/"
-    weight = 3
+    weight = 4
 
 [markup.goldmark.renderer]
   unsafe = true

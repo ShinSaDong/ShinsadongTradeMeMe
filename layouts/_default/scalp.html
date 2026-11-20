@@ -1,0 +1,100 @@
+{{ define "main" }}
+<div class="dash-head">
+  <div>
+    <h1>단타 분석</h1>
+    <div class="dash-meta">거래량 상위 50 · 1분/3분/5분 봉 · 실전 패턴 6가지 · 기준 <span id="rankAt">-</span></div>
+  </div>
+  <div class="sc-controls">
+    <div class="seg" id="sortSeg">
+      <button type="button" class="seg-btn active" data-by="volume">거래량순</button>
+      <button type="button" class="seg-btn" data-by="value">거래대금순</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="etfChk"> ETF·ETN 포함</label>
+    <button type="button" class="tab" id="scanBtn">전체 신호 스캔</button>
+  </div>
+</div>
+
+<div class="notice">
+  정해진 규칙으로 계산한 <b>참고용 수치</b>이며 투자 권유가 아닙니다. 매수가·손절가·목표가는 분봉 패턴에서 기계적으로 나온 값이라 실제 체결·호가 상황과 다를 수 있습니다. 진입 전 손절가와 비중은 직접 정하세요.
+</div>
+<div class="notice" id="staticNotice" hidden>
+  이 주소(GitHub Pages)에서는 실시간 순위·분봉을 가져올 수 없습니다. <a href="https://shinsadongtradememe.sin8361.workers.dev/scalp/">실시간 주소에서 열기 →</a>
+</div>
+
+<div class="sc-grid">
+  <section class="card sc-list">
+    <h2>거래량 상위 <span id="rankBy" class="sub"></span></h2>
+    <div class="sub" id="scanStatus">종목을 누르면 패턴을 분석합니다. "전체 신호 스캔"을 누르면 50개 종목의 현재 신호를 표시합니다.</div>
+    <div class="table-wrap sc-table-wrap"><table class="data sc-table" id="rankTable"><tbody><tr><td>불러오는 중…</td></tr></tbody></table></div>
+  </section>
+
+  <section class="card sc-detail" id="detail">
+    <div class="empty" id="detailEmpty">왼쪽 목록에서 종목을 선택하세요.</div>
+    <div id="detailBody" hidden>
+      <div class="sc-head">
+        <div>
+          <h2 id="dName">-</h2>
+          <div class="sub" id="dMeta">-</div>
+        </div>
+        <div class="seg" id="tfSeg">
+          <button type="button" class="seg-btn active" data-tf="1">1분</button>
+          <button type="button" class="seg-btn" data-tf="3">3분</button>
+          <button type="button" class="seg-btn" data-tf="5">5분</button>
+        </div>
+      </div>
+
+      <div class="sc-verdict" id="verdict">
+        <span class="badge" id="vBadge">-</span>
+        <div>
+          <div class="v-title" id="vTitle">-</div>
+          <div class="v-text" id="vText">-</div>
+        </div>
+      </div>
+
+      <div class="plan-grid" id="planGrid"></div>
+
+      <div class="sc-chart" id="chart"></div>
+      <div class="legend-note">빨강/파랑 캔들 · 노랑 선 VWAP · 하늘색 MA5 · 보라 MA20 · 점선: 매수(초록)·손절(빨강)·목표(파랑) · 원 숫자는 패턴 번호</div>
+
+      <div class="kpis sc-ctx" id="ctx"></div>
+
+      <h3 class="sc-h3">감지된 패턴</h3>
+      <div id="patterns"></div>
+
+      <h3 class="sc-h3">수량 계산 (1회 손실 한도)</h3>
+      <div class="calc">
+        <label>투자금 (원)<input type="number" id="capital" inputmode="numeric" value="10000000" step="100000"></label>
+        <label>1회 손실 한도 (%)<input type="number" id="riskPct" inputmode="decimal" value="1" step="0.1"></label>
+        <div id="calcOut" class="calc-out">-</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="card">
+  <h2>패턴 규칙 요약</h2>
+  <div class="sub">분석에 쓰는 규칙입니다. 자세한 해석은 <a href="{{ "posts/2026-11-20-scalping-patterns/" | relURL }}">단타 실전 패턴 해석 글</a>에 있습니다.</div>
+  <div class="table-wrap">
+    <table class="data rules">
+      <thead><tr><th>패턴</th><th>감지 조건</th><th>매수가</th><th>손절가</th></tr></thead>
+      <tbody>
+        <tr><td>① 페이크 이탈</td><td>직전 20봉 저점(지지선)을 깬 뒤 3봉 안에 평균 1.2배 이상 거래량으로 지지선 위 회복</td><td>지지선 회복 가격</td><td>이탈 저점 − 1호가</td></tr>
+        <tr><td>② 진짜 지지</td><td>최근 40봉에서 ±0.3% 안 저점 3번 이상, 반등 거래량 &gt; 하락 거래량</td><td>지지 구간 상단</td><td>지지 하단 − 2호가</td></tr>
+        <tr><td>③ 장대 윗꼬리</td><td>윗꼬리 ≥ 몸통 2배·봉 길이의 50%, 평균보다 1.5배 긴 봉, 급등 또는 당일 고점</td><td colspan="2">추격 금지 · 고가 재돌파 전까지 경고 유지</td></tr>
+        <tr><td>④ 시초가 범위 돌파</td><td>개장 15분 고가를 평균 1.3배 이상 거래량으로 돌파, 재지지 시 가점</td><td>범위 상단 + 1호가</td><td>상단 − 범위의 30%</td></tr>
+        <tr><td>⑤ 이평선 눌림</td><td>MA5 &gt; MA20, MA20 상승, 이평선까지 거래량 줄며 눌린 뒤 거래량 늘며 양봉</td><td>반등 양봉 종가</td><td>눌림 저점·MA20 − 1호가</td></tr>
+        <tr><td>⑥ 전고 돌파·재돌파</td><td>당일 전고점을 평균 1.5배 거래량으로 돌파 → 눌림에서 전고 지지 → 재상승</td><td>재돌파 종가 / 전고</td><td>전고 −0.5%·눌림 저점</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="legend-note">목표가: 1차 = 손실폭의 1.5배(가까운 저항이 있으면 그 가격), 2차 = 손실폭의 2.5배. 점수 보정: VWAP 위 +8 / 아래 −12, 5분 추세 상승 +10 / 하락 −15, 장대 윗꼬리 −20, 시간대(개장 직후·마감 임박·애프터마켓) 감점.</div>
+</section>
+
+<script>window.TM_CONFIG = { krMode: "{{ site.Params.krDataMode | default "api" }}" };</script>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="{{ "js/scalp-engine.js" | relURL }}"></script>
+<script src="{{ "js/scalp.js" | relURL }}"></script>
+{{ end }}
