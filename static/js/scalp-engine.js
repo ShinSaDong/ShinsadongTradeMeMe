@@ -125,14 +125,15 @@
     let t1 = entry + 1.5 * r;
     if (refHigh && refHigh >= entry + 1.5 * r && refHigh <= entry + 3 * r) t1 = refHigh; // 손익비 1.5~3 사이에 저항이 있으면 1차 목표로
     const t2 = Math.max(entry + 2.5 * r, t1 + r);
+    const target1 = roundTick(t1, "up", isEtf); // 호가 반올림 때문에 손익비가 1.5 아래로 내려가지 않게 올림
     return {
       entry,
       stop,
-      target1: roundTick(t1, "down", isEtf),
-      target2: roundTick(t2, "down", isEtf),
+      target1,
+      target2: roundTick(t2, "up", isEtf),
       risk: r,
       riskPct: (r / entry) * 100,
-      rr1: (roundTick(t1, "down", isEtf) - entry) / r,
+      rr1: (target1 - entry) / r,
     };
   }
 
@@ -387,6 +388,8 @@
       // 매수가에서 이미 멀리 달아난 자리는 지금 쓸 수 없는 계획이므로 순위를 낮춤
       const ext = (last.c - s.plan.entry) / s.plan.risk;
       if (ext > 2) score -= 25; else if (ext > 1) score -= 10; else if (ext >= -0.5) score += 5;
+      // 단타 손절 폭은 짧아야 함: 3% 넘으면 감점
+      if (s.plan.riskPct > 3) score -= 20; else if (s.plan.riskPct > 2) score -= 8;
       return { ...s, finalScore: Math.max(0, Math.min(100, Math.round(score))) };
     }).sort((a, b) => b.finalScore - a.finalScore);
 
@@ -397,7 +400,10 @@
       timing = `장대 윗꼬리 이후 고가(${num(warn.level)}원)를 다시 넘기 전까지는 신규 매수를 피하세요.`;
     } else if (!best || best.finalScore < 55) {
       action = { code: "wait", label: "관망", tone: "neutral" };
-      timing = best ? `신호가 약합니다(${best.finalScore}점). ${best.name} 조건이 더 갖춰질 때까지 기다리세요.` : "규칙에 맞는 진입 자리가 아직 없습니다.";
+      timing = best && best.finalScore >= 30
+        ? `신호가 약합니다(${best.finalScore}점). ${best.name} 조건이 더 갖춰질 때까지 기다리세요.` +
+          (best.plan.riskPct > 3 ? ` 손절 폭이 ${best.plan.riskPct.toFixed(1)}%로 넓어 단타에 맞지 않습니다.` : "")
+        : "규칙에 맞는 진입 자리가 아직 없습니다.";
     } else {
       const p = best.plan;
       const ext = (last.c - p.entry) / p.risk;
@@ -409,7 +415,8 @@
         timing = `이미 매수가보다 ${(ext).toFixed(1)}R 올라 추격 구간입니다. ${num(p.entry)}원 부근까지 눌렸다가 지지되면 진입을 검토하세요.`;
       } else if (ext >= -0.5) {
         action = { code: "buy", label: "진입 검토", tone: "buy" };
-        timing = `지금이 계획한 매수가(${num(p.entry)}원) 부근입니다. 손절가 ${num(p.stop)}원을 먼저 정하고 진입을 검토할 수 있는 구간입니다.`;
+        timing = `지금이 계획한 매수가(${num(p.entry)}원) 부근입니다. 손절가 ${num(p.stop)}원을 먼저 정하고 진입을 검토할 수 있는 구간입니다.` +
+          (p.riskPct > 2 ? ` 손절 폭이 ${p.riskPct.toFixed(1)}%로 넓은 편이라 비중을 줄이세요.` : "");
       } else {
         action = { code: "near", label: "매수가 대기", tone: "neutral" };
         timing = `현재가가 매수가보다 낮습니다. ${num(p.entry)}원을 회복(재지지)하는 것을 확인한 뒤 진입하세요.`;
