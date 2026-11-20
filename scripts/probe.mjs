@@ -1,12 +1,20 @@
-const H={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36","Referer":"https://m.stock.naver.com/"};
-const urls=[
- "https://m.stock.naver.com/api/stocks/quantTop/KOSPI?page=1&pageSize=5",
- "https://m.stock.naver.com/api/stocks/quantTop/KOSDAQ?page=1&pageSize=5",
- "https://m.stock.naver.com/api/stocks/marketValue/KOSPI?page=1&pageSize=3",
- "https://m.stock.naver.com/api/stocks/priceTop/KOSPI?page=1&pageSize=3",
- "https://m.stock.naver.com/api/stocks/up/KOSPI?page=1&pageSize=3",
- "https://m.stock.naver.com/api/stocks/searchTop/KOSPI?page=1&pageSize=3",
- "https://finance.naver.com/sise/sise_quant.naver?sosok=0",
- "https://m.stock.naver.com/api/stock/005930/basic",
-];
-for(const u of urls){try{const r=await fetch(u,{headers:H});const b=Buffer.from(await r.arrayBuffer());let t=b.toString('utf8');if(u.includes('finance.naver.com/sise')){t=new TextDecoder('euc-kr').decode(b);const i=t.indexOf('type_2');t=t.slice(i,i+2500);}console.log('=====',u,r.status,b.length);console.log(t.slice(0,2500));}catch(e){console.log('=====',u,'ERR',e.message)}}
+import { handleRank } from "../lib/api.js";
+import { fetchMinuteBars } from "../lib/naver.js";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const S = require("../static/js/scalp-engine.js");
+const res = await handleRank(new Request("https://x.dev/api/rank?n=50&by=volume&etf=0"));
+const j = await res.json();
+console.log("RANK status", res.status, "count", j.count, j.error || "");
+for (const s of (j.stocks || []).slice(0, 12)) console.log(s.rank, s.code, s.name, s.type, s.price, s.changeRate, s.volume, s.value);
+for (const s of (j.stocks || []).slice(0, 5)) {
+  const m = await fetchMinuteBars(s.code);
+  for (const tf of [1, 3, 5]) {
+    const r = S.analyze(m.bars, { tf });
+    if (!r.ok) { console.log(s.name, tf, r.reason); continue; }
+    console.log(`== ${s.name} ${tf}m bars=${r.bars.length} last=${r.last.c} vwap=${Math.round(r.vwap)} trend=${r.trend.label} action=${r.action.label}`);
+    console.log("   timing:", r.timing);
+    if (r.best) console.log("   best:", r.best.name, r.best.finalScore, JSON.stringify(r.best.plan));
+    for (const sg of r.signals) console.log("   -", sg.no, sg.name, sg.side, sg.holding, S.hhmm(sg.at), sg.score);
+  }
+}
