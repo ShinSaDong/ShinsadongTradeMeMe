@@ -156,8 +156,15 @@
     const sig = (corr || []).filter((c) => isNum(c.r) && ["frg", "ins", "ind", "prog", "futFrg"].includes(c.key)).sort((a, b) => Math.abs(b.r) - Math.abs(a.r));
     if (sig.length) {
       const top = sig[0];
-      L.push(`오늘 5분 단위로 ${name} 등락과 가장 같이 움직인 수급은 ${top.label.replace(" → 지수", "")}입니다 (상관 ${top.r.toFixed(2)}, ${top.strength}, ${top.n}구간).` +
-        (isNum(top.lead) && Math.abs(top.lead) >= 0.4 ? ` 5분 앞선 수급과 다음 5분 지수의 상관도 ${top.lead.toFixed(2)}라, 이 수급이 지수보다 먼저 움직이는 경향이 있습니다.` : ""));
+      const who = top.label.replace(" → 지수", "");
+      if (Math.abs(top.r) < 0.4) {
+        L.push(`아직 ${name} 5분 등락을 뚜렷하게 이끈 수급은 없습니다 (가장 높은 상관: ${who} ${top.r.toFixed(2)}, ${top.n}구간).`);
+      } else if (top.r > 0) {
+        L.push(`오늘 5분 단위로 ${name} 등락과 가장 같이 움직인 수급은 ${who}입니다 (상관 ${top.r.toFixed(2)}, ${top.strength}, ${top.n}구간). 이 주체가 살 때 지수가 오르고 팔 때 내리는, 지수를 이끄는 수급입니다.` +
+          (isNum(top.lead) && Math.abs(top.lead) >= 0.4 ? ` 앞 5분 수급과 다음 5분 지수의 상관도 ${top.lead.toFixed(2)}라 지수보다 먼저 움직이는 경향이 있습니다.` : ""));
+      } else {
+        L.push(`${who}는 ${name}과 반대로 움직였습니다 (상관 ${top.r.toFixed(2)}, ${top.strength}). 지수가 내릴 때 사고 오를 때 파는 역추세 매매로, 지수를 이끌기보다 받아내는 쪽입니다.`);
+      }
     }
     // 6. 최근 30분 외국인
     if (md && md.momentum) {
