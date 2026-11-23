@@ -13,6 +13,11 @@ export class FlowStore extends DurableObject {
       data TEXT NOT NULL,
       PRIMARY KEY (day, slot)
     )`);
+    // 달력용: 지난 거래일의 일별 요약(네이버 일별 투자자 매매). 한 번 받으면 다시 안 받음
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS daily (
+      day TEXT PRIMARY KEY,
+      data TEXT NOT NULL
+    )`);
   }
 
   // 같은 날·같은 1분 슬롯은 마지막 값으로 덮어씀
@@ -27,6 +32,24 @@ export class FlowStore extends DurableObject {
 
   day(day) {
     return this.sql.exec("SELECT data FROM snap WHERE day = ? ORDER BY slot", day).toArray().map((r) => JSON.parse(r.data));
+  }
+
+  // ym("YYYYMM") 달의 날짜별 마지막 스냅샷
+  monthLast(ym) {
+    return this.sql.exec(
+      `SELECT s.data FROM snap s JOIN (SELECT day, MAX(slot) AS m FROM snap WHERE day LIKE ? GROUP BY day) t
+       ON s.day = t.day AND s.slot = t.m`, ym + "%").toArray().map((r) => JSON.parse(r.data));
+  }
+
+  getDaily(ym) {
+    const out = {};
+    for (const r of this.sql.exec("SELECT day, data FROM daily WHERE day LIKE ?", ym + "%").toArray()) out[r.day] = JSON.parse(r.data);
+    return out;
+  }
+
+  putDaily(rows) {
+    for (const [day, data] of rows) this.sql.exec("INSERT OR REPLACE INTO daily (day, data) VALUES (?, ?)", day, JSON.stringify(data));
+    return true;
   }
 
   days(limit = 20) {

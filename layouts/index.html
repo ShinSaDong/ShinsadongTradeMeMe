@@ -15,6 +15,15 @@
   <div class="home-live-grid" id="hlGrid"></div>
 </section>
 
+<section class="card mcal" id="mcal" hidden>
+  <div class="mcal-head"><h2 id="mcalTitle">이번 달 장세 달력</h2><span class="sub">날짜를 누르면 그날 장세와 이유를 보여줍니다 · 빨강 강세 / 파랑 약세</span></div>
+  <div class="mcal-body">
+    <div class="mcal-grid" id="mcalGrid"></div>
+    <div class="mcal-detail" id="mcalDetail"></div>
+  </div>
+</section>
+<script id="mcal-notes" type="application/json">{{ site.Data.market_notes | default dict | jsonify | safeJS }}</script>
+
 <div class="feature-grid">
   <a class="card feature" href="{{ "market/" | relURL }}">
     <div class="f-tag">종합투자</div>
@@ -59,6 +68,7 @@
 {{ define "scripts" }}
 <script src="{{ "js/refresh.js" | relURL }}"></script>
 <script src="{{ "js/flow-engine.js" | relURL }}"></script>
+<script src="{{ "js/calendar.js" | relURL }}" defer></script>
 <script>
 (function () {
   if ((window.TM_CONFIG || {}).krMode === "static" || !window.Flow) return;
