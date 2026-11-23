@@ -7,6 +7,7 @@
       <a href="{{ "contact/" | relURL }}">연락처</a> ·
       <a href="{{ "index.xml" | relURL }}">RSS</a>
     </p>
+    {{ with site.Params.contactEmail }}<p class="footer-contact">문의 <a href="mailto:{{ . }}">{{ . }}</a></p>{{ end }}
     <p>© {{ now.Year }} {{ site.Title }}</p>
   </div>
 </footer>
