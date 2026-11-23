@@ -29,6 +29,7 @@
 
   function render() {
     const { data, res } = state;
+    if (window.TMRefresh) $("mkMode").textContent = window.TMRefresh.label();
     $("mkAt").textContent = `${data.date ? data.date.slice(4, 6) + "/" + data.date.slice(6) : "-"} ${new Date(data.fetchedAt).toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour12: false, hour: "2-digit", minute: "2-digit" })}`;
     const days = Array.from(new Set([data.date, ...(data.days || [])].filter(Boolean))).sort().reverse();
     $("daySel").innerHTML = days.map((d) => `<option value="${d}" ${d === data.date ? "selected" : ""}>${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6)}</option>`).join("");
@@ -141,7 +142,16 @@
     $("daySel").addEventListener("change", (e) => load(e.target.value));
     $("mkRefresh").addEventListener("click", () => load($("daySel").value));
     load();
-    setInterval(() => { if (!document.hidden && (!state.data || $("daySel").value === state.data.date)) load(); }, 5 * 60 * 1000);
+    // 장중 1분, 장 마감 후 5분마다 (오늘 날짜를 보고 있을 때만)
+    let lastAt = Date.now();
+    const R = window.TMRefresh;
+    const tick = () => {
+      if (state.data && $("daySel").value !== state.data.date) return;
+      if (R && !R.krDue(lastAt)) return;
+      lastAt = Date.now();
+      load();
+    };
+    if (R) R.everyMinute(tick); else setInterval(tick, 60 * 1000);
   }
   init();
 })();

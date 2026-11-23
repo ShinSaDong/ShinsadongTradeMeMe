@@ -1,7 +1,7 @@
 // Cloudflare Workers 진입점
 // - /api/kr, /api/binance, /api/rank, /api/flow 는 서버 코드로 처리
 // - 나머지는 Hugo 가 만든 public/ 정적 파일(ASSETS)로 응답
-// - 크론(5분마다): 장 시간이면 시장 수급 스냅샷을 FlowStore 에 저장
+// - 크론(1분마다): 장 시간이면 시장 수급 스냅샷을 FlowStore 에 저장 (5분 구간마다 최신값 유지)
 import { handleKr, handleBinance, handleRank, handleFlow } from "../lib/api.js";
 import { fetchSnapshot, inFlowWindow } from "../lib/flow.js";
 import { kstDateStr } from "../lib/naver.js";

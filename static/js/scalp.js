@@ -24,6 +24,7 @@
     try {
       const j = await getJSON(`/api/rank?n=50&by=${state.by}&etf=${state.etf ? 1 : 0}`);
       state.list = j.stocks || [];
+      if (window.TMRefresh) $("scMode").textContent = window.TMRefresh.label();
       $("rankAt").textContent = new Date(j.fetchedAt).toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour12: false, hour: "2-digit", minute: "2-digit" });
       $("rankBy").textContent = state.by === "value" ? "· 거래대금순" : "· 거래량순";
       renderRank();
@@ -59,7 +60,7 @@
   // ---------- 분봉 ----------
   async function minute(code) {
     const c = state.cache.get(code);
-    if (c && Date.now() - c.at < 55 * 1000) return c.data;
+    if (c && Date.now() - c.at < 50 * 1000) return c.data;
     const data = await getJSON(`/api/kr?code=${code}&type=minute`);
     state.cache.set(code, { at: Date.now(), data });
     return data;
@@ -253,8 +254,16 @@
     $("scanBtn").addEventListener("click", scanAll);
     ["capital", "riskPct"].forEach((id) => $(id).addEventListener("input", () => updateCalc()));
     loadRank();
-    setInterval(() => { if (!document.hidden && state.selected) select(state.selected); }, 60 * 1000);
-    setInterval(() => { if (!document.hidden) loadRank(); }, 3 * 60 * 1000);
+    // 장중 1분, 장 마감 후 5분마다 선택 종목 분봉과 순위를 새로 받음
+    let lastAt = Date.now();
+    const R = window.TMRefresh;
+    const tick = () => {
+      if (R && !R.krDue(lastAt)) return;
+      lastAt = Date.now();
+      loadRank();
+      if (state.selected) select(state.selected);
+    };
+    if (R) R.everyMinute(tick); else setInterval(tick, 60 * 1000);
   }
   init();
 })();

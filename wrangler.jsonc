@@ -16,8 +16,8 @@
     "run_worker_first": ["/api/*"]
   },
   "workers_dev": true,
-  // 5분마다 실행 → 코드에서 평일 KST 08:55~16:35 일 때만 수급 스냅샷 저장
-  "triggers": { "crons": ["*/5 * * * *"] },
+  // 1분마다 실행 → 코드에서 평일 KST 08:55~16:35 일 때만 수급 스냅샷 저장(같은 5분 구간은 최신값으로 덮어씀)
+  "triggers": { "crons": ["* * * * *"] },
   // 5분 수급 저장소 (무료 요금제에서 쓸 수 있는 SQLite 기반 Durable Object)
   "durable_objects": { "bindings": [{ "name": "FLOW", "class_name": "FlowStore" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FlowStore"] }],

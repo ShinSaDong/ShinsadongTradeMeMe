@@ -2,7 +2,7 @@
 <div class="dash-head">
   <div>
     <h1>단타 분석</h1>
-    <div class="dash-meta">거래량 상위 50 · 1분/3분/5분 봉 · 실전 패턴 6가지 · 기준 <span id="rankAt">-</span></div>
+    <div class="dash-meta">거래량 상위 50 · 1분/3분/5분 봉 · 실전 패턴 6가지 · <span id="scMode">장중 1분/장후 5분 갱신</span> · 기준 <span id="rankAt">-</span></div>
   </div>
   <div class="sc-controls">
     <div class="seg" id="sortSeg">
@@ -95,6 +95,7 @@
 
 {{ define "scripts" }}
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="{{ "js/refresh.js" | relURL }}"></script>
 <script src="{{ "js/scalp-engine.js" | relURL }}"></script>
 <script src="{{ "js/scalp.js" | relURL }}"></script>
 {{ end }}

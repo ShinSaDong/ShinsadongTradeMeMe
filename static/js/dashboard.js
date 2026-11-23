@@ -3,7 +3,6 @@
   "use strict";
   const TM = window.TM;
   const SYMBOLS = JSON.parse(document.getElementById("symbols-data").textContent || "[]");
-  const REFRESH_MS = 5 * 60 * 1000;
   const BN = "https://fapi.binance.com";
   const $ = (id) => document.getElementById(id);
 
@@ -75,7 +74,19 @@
 
   // 국내 데이터: Cloudflare 에서는 /api/kr 함수, GitHub Pages 에서는 빌드 때 받아둔 정적 JSON
   const CFG = window.TM_CONFIG || { krMode: "api" };
+  // 국내 데이터는 장중 1분, 장 마감 후 5분마다만 새로 받고 그 사이에는 저장해 둔 값을 씀
+  const krCache = new Map();
+  let forceKr = false;
   async function loadKr(code, type) {
+    const key = code + ":" + type;
+    const c = krCache.get(key);
+    const R = window.TMRefresh;
+    if (c && !forceKr && R && !R.krDue(c.at)) return c.data;
+    const data = await loadKrFresh(code, type);
+    krCache.set(key, { at: Date.now(), data });
+    return data;
+  }
+  async function loadKrFresh(code, type) {
     const data = CFG.krMode === "static"
       ? await getJSON(`${CFG.krStaticBase}${code}-${type}.json?t=${Math.floor(Date.now() / 60000)}`)
       : await getJSON(`/api/kr?code=${code}&type=${type}`);
@@ -350,6 +361,7 @@
     renderComparison(sym, slots, bn);
     renderFlow(inv);
     $("lastUpdated").textContent = new Date().toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour12: false });
+    if (window.TMRefresh) $("refreshMode").textContent = window.TMRefresh.label();
   }
 
   async function refreshAll() {
@@ -366,8 +378,10 @@
     renderTabs();
     renderSummary();
     await refreshAll();
-    $("refreshBtn").addEventListener("click", refreshAll);
-    setInterval(() => { if (!document.hidden) refreshAll(); }, REFRESH_MS);
+    $("refreshBtn").addEventListener("click", async () => { forceKr = true; try { await refreshAll(); } finally { forceKr = false; } });
+    // 1분마다 실행: 바이낸스는 매번 새로 받고, 국내는 장중 1분·장후 5분 주기가 됐을 때만 새로 받음
+    if (window.TMRefresh) window.TMRefresh.everyMinute(refreshAll);
+    else setInterval(() => { if (!document.hidden) refreshAll(); }, 60 * 1000);
   }
 
   init();
