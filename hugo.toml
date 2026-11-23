@@ -13,7 +13,7 @@ summaryLength = 40
   description = "코스피·코스닥·선물 5분 수급과 시장 분위기, 바이낸스 국내주식 선물 롱/숏 비교, 거래량 상위 50 단타 패턴 분석까지 한곳에서 보는 국내 증시 트레이딩 참고 사이트"
   author = "Shinsadong"
   # 구글 애드센스 승인 후 게시자 ID를 넣으면 모든 페이지에 광고 스크립트가 들어갑니다. 예: "ca-pub-1234567890123456"
-  adsenseClient = ""
+  adsenseClient = "ca-pub-5739503575089778"
   contactEmail = "your-email@example.com"
   # 검색 등록 소유 확인 코드: 메타 태그의 content="..." 안쪽 값만 넣으면 모든 페이지 <head> 에 들어갑니다.
   googleSiteVerification = ""
