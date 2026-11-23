@@ -6,6 +6,14 @@
   <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
   <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
   <link rel="canonical" href="{{ .Permalink }}">
+  <link rel="manifest" href="{{ "manifest.webmanifest" | relURL }}">
+  <link rel="icon" href="{{ "favicon.ico" | relURL }}">
+  <link rel="apple-touch-icon" href="{{ "apple-touch-icon.png" | relURL }}">
+  <meta name="theme-color" content="#0b0e14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="TradeMeMe">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   {{ with site.Params.googleSiteVerification }}<meta name="google-site-verification" content="{{ . }}">{{ end }}
   {{ with site.Params.naverSiteVerification }}<meta name="naver-site-verification" content="{{ . }}">{{ end }}
   <meta property="og:description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
@@ -30,6 +38,6 @@
   </main>
   {{ partial "footer.html" . }}
   {{ block "scripts" . }}{{ end }}
-  <script src="{{ "js/notify.js" | relURL }}" data-base="{{ "" | relURL }}" data-mode="{{ site.Params.krDataMode | default "api" }}"></script>
+  <script src="{{ "js/notify.js" | relURL }}" data-base="{{ "" | relURL }}" data-guide="{{ "posts/2026-11-23-push-alert-guide/" | relURL }}" data-mode="{{ site.Params.krDataMode | default "api" }}"></script>
 </body>
 </html>
