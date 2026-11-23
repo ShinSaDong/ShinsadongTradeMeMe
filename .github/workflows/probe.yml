@@ -1,0 +1,13 @@
+name: probe
+on: workflow_dispatch
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
+          for u in \
+            "https://finance.naver.com/sise/investorDealTrendDay.naver?bizdate=20261123&sosok=01&page=1" \
+            "https://finance.naver.com/sise/programDealTrendDay.naver?bizdate=20261123&sosok=01&page=1" ; do
+            echo "=== $u"; curl -s -m 15 -A "$UA" "$u" | iconv -f euc-kr -t utf-8 -c | sed 's/<[^>]*>/ /g' | tr -s ' \t' ' ' | grep -v '^\s*$' | head -60; done
+          echo "=== fchart kosdaq"; curl -s -A "$UA" "https://fchart.stock.naver.com/sise.nhn?symbol=KOSDAQ&timeframe=day&count=3&requestType=0" | grep item
