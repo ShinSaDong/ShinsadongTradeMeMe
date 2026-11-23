@@ -1,0 +1,22 @@
+name: probe
+on: workflow_dispatch
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          UA="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
+          for u in \
+            "https://m.stock.naver.com/api/index/KOSPI/basic" \
+            "https://m.stock.naver.com/api/index/KPI200/basic" \
+            "https://m.stock.naver.com/api/index/KQ150/basic" \
+            "https://m.stock.naver.com/api/index/KOSDAQ150/basic" \
+            "https://m.stock.naver.com/api/index/KPI150/basic" \
+            "https://m.stock.naver.com/api/index/FUT/basic" \
+            "https://m.stock.naver.com/api/index/KQFUT/basic" \
+            "https://m.stock.naver.com/api/index/FUTKQ150/basic" \
+            "https://polling.finance.naver.com/api/realtime/domestic/index/KPI200" \
+            "https://polling.finance.naver.com/api/realtime/domestic/index/KQ150" \
+            "https://polling.finance.naver.com/api/realtime/domestic/index/FUT" \
+            "https://m.stock.naver.com/api/index/KOSDAQ/integration" ; do
+            echo "=== $u"; curl -s -m 15 -A "$UA" -H "Referer: https://m.stock.naver.com/" -w "\nHTTP %{http_code}\n" "$u" | head -c 1500; echo; done
