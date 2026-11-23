@@ -36,7 +36,7 @@ lib/naver.js        네이버 응답 파싱 (소스 2개씩, 자동 폴백)
 
 ## Cloudflare Workers 배포 (현재 운영)
 
-- 주소: https://shinsadongtradememe.sin8361.workers.dev
+- 주소: https://shinsadongtradememe.com (예비: https://shinsadongtradememe.sin8361.workers.dev)
 - GitHub `main`에 push하면 Cloudflare Workers Builds가 자동으로 `npx wrangler deploy`를 실행합니다.
 - `wrangler.jsonc`의 `build.command`가 Hugo(npm `hugo-extended@0.139.4`)로 `public/`을 만들고, `worker/index.js`가 `/api/kr`, `/api/binance`를 처리합니다. 나머지는 정적 파일로 응답합니다.
 - 대시보드 Build command는 비워두고, Deploy command는 `npx wrangler deploy`로 둡니다. `HUGO_VERSION` 변수는 필요 없습니다.
