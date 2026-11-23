@@ -30,5 +30,6 @@
   </main>
   {{ partial "footer.html" . }}
   {{ block "scripts" . }}{{ end }}
+  <script src="{{ "js/notify.js" | relURL }}" data-base="{{ "" | relURL }}" data-mode="{{ site.Params.krDataMode | default "api" }}"></script>
 </body>
 </html>

@@ -232,6 +232,24 @@
     const buys = state.list.filter((s) => (state.scan.get(s.code) || {}).tone === "buy").length;
     $("scanStatus").textContent = `${state.tf}분 봉 기준 스캔 완료 · "진입 검토" ${buys}개 종목. 신호는 시간이 지나면 바뀌니 다시 스캔하세요.`;
     btn.disabled = false;
+    state.lastScanAt = Date.now();
+    notifyNewBuys();
+  }
+
+  // 알림: 이번 스캔에서 새로 "진입 검토"가 된 종목만 알림 (같은 날 같은 종목은 한 번)
+  function notifyNewBuys() {
+    const N = window.TMNotify;
+    if (!N || !N.enabled("scalp")) return;
+    const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+    let seen = {};
+    try { seen = JSON.parse(localStorage.getItem("tm.ntf.scalpSeen") || "{}"); } catch (_) {}
+    if (seen.day !== day) seen = { day, codes: [] };
+    const fresh = state.list.filter((s) => (state.scan.get(s.code) || {}).tone === "buy" && !seen.codes.includes(s.code));
+    if (!fresh.length) return;
+    seen.codes.push(...fresh.map((s) => s.code));
+    try { localStorage.setItem("tm.ntf.scalpSeen", JSON.stringify(seen)); } catch (_) {}
+    const names = fresh.slice(0, 5).map((s) => s.name).join(", ") + (fresh.length > 5 ? ` 외 ${fresh.length - 5}개` : "");
+    N.notify("scalp:" + fresh.map((s) => s.code).join(","), `단타 진입 검토 ${fresh.length}종목 (${state.tf}분 봉)`, names, location.pathname + "#" + fresh[0].code, 0);
   }
 
   // ---------- 이벤트 ----------
@@ -252,6 +270,13 @@
     segClick("tfSeg", "tf", (v) => { state.tf = +v; state.scan.clear(); renderRank(); if (state.selected) select(state.selected); });
     $("etfChk").addEventListener("change", (e) => { state.etf = e.target.checked; loadRank(); });
     $("scanBtn").addEventListener("click", scanAll);
+    // 단타 알림을 켜 두면 장중 5분마다 자동 스캔 (탭이 백그라운드여도)
+    setInterval(() => {
+      const N = window.TMNotify;
+      if (!N || !N.enabled("scalp") || !N.marketOpen() || !state.list.length || $("scanBtn").disabled) return;
+      if (state.lastScanAt && Date.now() - state.lastScanAt < 5 * 60e3 - 5000) return;
+      scanAll();
+    }, 60e3);
     ["capital", "riskPct"].forEach((id) => $(id).addEventListener("input", () => updateCalc()));
     loadRank();
     // 장중 1분, 장 마감 후 5분마다 선택 종목 분봉과 순위를 새로 받음

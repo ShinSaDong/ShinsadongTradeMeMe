@@ -244,3 +244,17 @@ table.data .weak { opacity: .7; }
   .hero { padding: 24px 0 12px; }
   .hero h1 { font-size: 24px; }
 }
+
+/* 알림 */
+.header-inner { position: relative; }
+.ntf { position: relative; margin-left: 16px; flex: none; }
+.ntf-btn { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 4px 10px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.ntf-btn.on { color: #111; background: var(--accent); border-color: var(--accent); }
+.ntf-panel { position: absolute; right: 0; top: calc(100% + 8px); width: 340px; max-width: calc(100vw - 24px); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.4); z-index: 50; font-size: 13px; }
+.ntf-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; color: var(--text); line-height: 1.4; }
+.ntf-top { justify-content: space-between; margin-top: 0; }
+.ntf-sub { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+.ntf-num { width: 64px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
+.ntf-msg { color: var(--muted); font-size: 12px; }
+.site-header nav { margin-left: auto; }
+@media (max-width: 640px) { .ntf { display: none; } }
