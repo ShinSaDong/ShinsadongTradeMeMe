@@ -1,4 +1,4 @@
-// 5분 수급 스냅샷 저장소 (Durable Object, SQLite)
+// 1분 수급 스냅샷 저장소 (Durable Object, SQLite)
 // 무료 요금제에서 쓸 수 있는 SQLite 기반 Durable Object 하나에 모든 스냅샷을 저장합니다.
 import { DurableObject } from "cloudflare:workers";
 
@@ -15,7 +15,7 @@ export class FlowStore extends DurableObject {
     )`);
   }
 
-  // 같은 날·같은 5분 슬롯은 마지막 값으로 덮어씀
+  // 같은 날·같은 1분 슬롯은 마지막 값으로 덮어씀
   add(snap) {
     this.sql.exec("INSERT OR REPLACE INTO snap (day, slot, ts, data) VALUES (?, ?, ?, ?)",
       snap.bizdate, snap.slot, snap.ts, JSON.stringify(snap));

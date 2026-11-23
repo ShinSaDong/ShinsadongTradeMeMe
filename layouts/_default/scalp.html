@@ -5,6 +5,11 @@
     <div class="dash-meta">거래량 상위 50 · 1분/3분/5분 봉 · 실전 패턴 6가지 · <span id="scMode">장중 1분/장후 5분 갱신</span> · 기준 <span id="rankAt">-</span></div>
   </div>
   <div class="sc-controls">
+    <div class="seg" id="tfSeg" title="분석·스캔에 쓰는 분봉">
+      <button type="button" class="seg-btn active" data-tf="1">1분</button>
+      <button type="button" class="seg-btn" data-tf="3">3분</button>
+      <button type="button" class="seg-btn" data-tf="5">5분</button>
+    </div>
     <div class="seg" id="sortSeg">
       <button type="button" class="seg-btn active" data-by="volume">거래량순</button>
       <button type="button" class="seg-btn" data-by="value">거래대금순</button>
@@ -35,11 +40,6 @@
         <div>
           <h2 id="dName">-</h2>
           <div class="sub" id="dMeta">-</div>
-        </div>
-        <div class="seg" id="tfSeg">
-          <button type="button" class="seg-btn active" data-tf="1">1분</button>
-          <button type="button" class="seg-btn" data-tf="3">3분</button>
-          <button type="button" class="seg-btn" data-tf="5">5분</button>
         </div>
       </div>
 

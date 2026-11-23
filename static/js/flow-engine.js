@@ -1,7 +1,7 @@
 /* 종합투자 수급 분석 엔진 (브라우저 + Node 테스트 공용)
  *
- * 입력: 5분마다 저장된 누적 수급 스냅샷 + 지수·선물 1분 봉
- * 출력: 5분 수급 표, 수급↔지수 상관관계, 시장 분위기 점수와 해석 문장
+ * 입력: 1분마다 저장된 누적 수급 스냅샷 + 지수·선물 1분 봉
+ * 출력: 1분/5분 수급 표, 수급↔지수 상관관계, 시장 분위기 점수와 해석 문장
  * 단위: 코스피·코스닥 = 억원, 선물 = 네이버 표기 기준
  */
 (function (root) {
@@ -10,11 +10,25 @@
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const isNum = (x) => x !== null && x !== undefined && isFinite(x);
 
-  function slotEndTs(date, slot) {
-    // date "YYYYMMDD", slot "HHMM" → 해당 5분 구간이 끝나는 시각(epoch ms)
+  function slotEndTs(date, slot, step = 5) {
+    // date "YYYYMMDD", slot "HHMM" → 해당 step 분 구간이 끝나는 시각(epoch ms)
     const y = +date.slice(0, 4), m = +date.slice(4, 6) - 1, d = +date.slice(6, 8);
     const hh = +slot.slice(0, 2), mm = +slot.slice(2, 4);
-    return Date.UTC(y, m, d, hh, mm) - KST + 5 * 60e3;
+    return Date.UTC(y, m, d, hh, mm) - KST + step * 60e3;
+  }
+
+  // step 분 구간마다 가장 늦은 스냅샷 하나만 남김 (서버가 이미 맞춰 줬으면 그대로)
+  function resample(snaps, step) {
+    if (step <= 1) return (snaps || []).slice();
+    const by = new Map();
+    for (const s of snaps || []) {
+      const m = (+s.slot.slice(0, 2)) * 60 + (+s.slot.slice(2, 4));
+      const b = Math.floor(m / step) * step;
+      const key = String(Math.floor(b / 60)).padStart(2, "0") + String(b % 60).padStart(2, "0");
+      const cur = by.get(key);
+      if (!cur || s.ts > cur.ts) by.set(key, { ...s, slot: key });
+    }
+    return [...by.values()];
   }
 
   // 1분 봉에서 시각 t 직전 종가
@@ -35,14 +49,14 @@
   }
   const strength = (r) => (!isNum(r) ? "-" : Math.abs(r) >= 0.7 ? "강함" : Math.abs(r) >= 0.4 ? "보통" : "약함");
 
-  // 시장별 5분 행 만들기
-  function buildRows(date, snaps, code, minuteBars) {
+  // 시장별 step 분 행 만들기
+  function buildRows(date, snaps, code, minuteBars, step = 5) {
     const list = (snaps || []).filter((s) => s.markets && s.markets[code]).sort((a, b) => a.slot.localeCompare(b.slot));
     const rows = [];
     let prev = null;
     for (const s of list) {
       const m = s.markets[code];
-      const end = slotEndTs(date, s.slot);
+      const end = slotEndTs(date, s.slot, step);
       const px = priceAt(minuteBars, Math.min(end, s.ts + 1)) ?? m.price ?? null;
       const cur = {
         slot: s.slot, live: !!s.live,
@@ -90,7 +104,7 @@
   const fmtRaw = (v) => (!isNum(v) ? "-" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(Math.round(v)).toLocaleString("ko-KR"));
 
   // 시장 분위기 점수(−100 ~ +100)와 해석
-  function mood(code, last, futLast, rows) {
+  function mood(code, last, futLast, rows, step = 5) {
     if (!last) return null;
     const parts = [];
     const add = (label, v) => { if (isNum(v)) parts.push({ label, v: Math.round(v) }); };
@@ -105,14 +119,16 @@
     const tone = score >= 15 ? "up" : score <= -15 ? "down" : "flat";
 
     // 최근 30분 외국인 흐름
-    const recent = rows.slice(-6).map((r) => r.dFrg).filter(isNum);
-    const earlier = rows.slice(-12, -6).map((r) => r.dFrg).filter(isNum);
+    const n = Math.max(1, Math.round(30 / step));
+    const need = Math.ceil(n / 2);
+    const recent = rows.slice(-n).map((r) => r.dFrg).filter(isNum);
+    const earlier = rows.slice(-2 * n, -n).map((r) => r.dFrg).filter(isNum);
     const sum = (a) => a.reduce((x, y) => x + y, 0);
-    const momentum = recent.length >= 3 ? { recent: sum(recent), earlier: earlier.length >= 3 ? sum(earlier) : null } : null;
+    const momentum = recent.length >= need ? { recent: sum(recent), earlier: earlier.length >= need ? sum(earlier) : null } : null;
     return { score, label, tone, parts, momentum };
   }
 
-  function narrative(code, name, last, futLast, corr, md) {
+  function narrative(code, name, last, futLast, corr, md, step = 5) {
     const L = [];
     if (!last) return L;
     // 1. 주체 구도
@@ -158,10 +174,10 @@
       const top = sig[0];
       const who = top.label.replace(" → 지수", "");
       if (Math.abs(top.r) < 0.4) {
-        L.push(`아직 ${name} 5분 등락을 뚜렷하게 이끈 수급은 없습니다 (가장 높은 상관: ${who} ${top.r.toFixed(2)}, ${top.n}구간).`);
+        L.push(`아직 ${name} ${step}분 등락을 뚜렷하게 이끈 수급은 없습니다 (가장 높은 상관: ${who} ${top.r.toFixed(2)}, ${top.n}구간).`);
       } else if (top.r > 0) {
-        L.push(`오늘 5분 단위로 ${name} 등락과 가장 같이 움직인 수급은 ${who}입니다 (상관 ${top.r.toFixed(2)}, ${top.strength}, ${top.n}구간). 이 주체가 살 때 지수가 오르고 팔 때 내리는, 지수를 이끄는 수급입니다.` +
-          (isNum(top.lead) && Math.abs(top.lead) >= 0.4 ? ` 앞 5분 수급과 다음 5분 지수의 상관도 ${top.lead.toFixed(2)}라 지수보다 먼저 움직이는 경향이 있습니다.` : ""));
+        L.push(`오늘 ${step}분 단위로 ${name} 등락과 가장 같이 움직인 수급은 ${who}입니다 (상관 ${top.r.toFixed(2)}, ${top.strength}, ${top.n}구간). 이 주체가 살 때 지수가 오르고 팔 때 내리는, 지수를 이끄는 수급입니다.` +
+          (isNum(top.lead) && Math.abs(top.lead) >= 0.4 ? ` 앞 ${step}분 수급과 다음 ${step}분 지수의 상관도 ${top.lead.toFixed(2)}라 지수보다 먼저 움직이는 경향이 있습니다.` : ""));
       } else {
         L.push(`${who}는 ${name}과 반대로 움직였습니다 (상관 ${top.r.toFixed(2)}, ${top.strength}). 지수가 내릴 때 사고 오를 때 파는 역추세 매매로, 지수를 이끌기보다 받아내는 쪽입니다.`);
       }
@@ -181,27 +197,28 @@
     return L;
   }
 
-  function analyzeFlow(data) {
+  function analyzeFlow(data, step) {
     const date = data.date;
-    const snaps = data.snaps || [];
+    step = step || data.step || 5;
+    const snaps = resample(data.snaps || [], step);
     const min = data.minutes || {};
-    const fut = buildRows(date, snaps, "FUT", (min.FUT || {}).bars);
+    const fut = buildRows(date, snaps, "FUT", (min.FUT || {}).bars, step);
     const futLast = fut[fut.length - 1] || null;
     const markets = {};
     for (const [code, name] of [["KOSPI", "코스피"], ["KOSDAQ", "코스닥"]]) {
-      const rows = buildRows(date, snaps, code, (min[code] || {}).bars);
+      const rows = buildRows(date, snaps, code, (min[code] || {}).bars, step);
       const last = rows[rows.length - 1] || null;
       const corr = correlations(rows, code === "KOSPI" ? fut : null);
-      const md = mood(code, last, futLast, rows);
-      markets[code] = { code, name, rows, last, corr, mood: md, story: narrative(code, name, last, futLast, corr, md) };
+      const md = mood(code, last, futLast, rows, step);
+      markets[code] = { code, name, rows, last, corr, mood: md, story: narrative(code, name, last, futLast, corr, md, step) };
     }
     markets.FUT = { code: "FUT", name: "코스피200 선물", rows: fut, last: futLast };
     const k = markets.KOSPI.mood, q = markets.KOSDAQ.mood;
     const overall = k ? Math.round(k.score * 0.65 + (q ? q.score * 0.35 : k.score * 0.35)) : null;
-    return { date, markets, overall, points: (markets.KOSPI.rows || []).length };
+    return { date, step, markets, overall, points: (markets.KOSPI.rows || []).length };
   }
 
-  const api = { fmtRaw, analyzeFlow, buildRows, correlations, mood, narrative, pearson, fmtEok, slotEndTs, priceAt };
+  const api = { fmtRaw, analyzeFlow, resample, buildRows, correlations, mood, narrative, pearson, fmtEok, slotEndTs, priceAt };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Flow = api;
 })(typeof window !== "undefined" ? window : globalThis);

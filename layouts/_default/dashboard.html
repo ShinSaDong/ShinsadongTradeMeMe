@@ -2,9 +2,15 @@
 <div class="dash-head">
   <div>
     <h1>바이낸스 롱/숏 vs 국내 장 수급</h1>
-    <div class="dash-meta">5분 단위 · 바이낸스 1분 · 국내 <span id="refreshMode">장중 1분/장후 5분 갱신</span> · 마지막 갱신 <span id="lastUpdated">-</span></div>
+    <div class="dash-meta"><span class="stepTxt">5분</span> 단위 · 바이낸스 1분 · 국내 <span id="refreshMode">장중 1분/장후 5분 갱신</span> · 마지막 갱신 <span id="lastUpdated">-</span></div>
   </div>
-  <button class="tab" id="refreshBtn" type="button">지금 새로고침</button>
+  <div class="sc-controls">
+    <div class="seg" id="stepSeg">
+      <button type="button" class="seg-btn" data-step="1">1분</button>
+      <button type="button" class="seg-btn active" data-step="5">5분</button>
+    </div>
+    <button class="tab" id="refreshBtn" type="button">지금 새로고침</button>
+  </div>
 </div>
 
 <div class="notice">
@@ -20,7 +26,7 @@
 <div class="compare-grid">
   <section class="card binance">
     <h2>바이낸스 무기한 선물 <span id="bnSymbol" class="sub"></span></h2>
-    <div class="sub">최근 24시간 · 5분 · KST</div>
+    <div class="sub">최근 24시간 · <span class="stepTxt">5분</span> · KST<span id="bnStepNote" hidden> · 롱 계정·상위 트레이더 비율은 바이낸스가 5분 단위로만 제공</span></div>
     <div id="bnBody">
       <div class="kpis">
         <div class="kpi"><div class="label">가격 (USDT)</div><div class="value" id="bnPrice">-</div></div>
@@ -42,7 +48,7 @@
         <div class="kpi"><div class="label">현재가 (원)</div><div class="value" id="krPrice">-</div></div>
         <div class="kpi"><div class="label">등락률</div><div class="value" id="krChg">-</div></div>
         <div class="kpi"><div class="label">당일 매수 체결 비율</div><div class="value" id="krBuy">-</div></div>
-        <div class="kpi"><div class="label">최근 5분 매수 비율</div><div class="value" id="krBuy5">-</div></div>
+        <div class="kpi"><div class="label">최근 <span class="stepTxt">5분</span> 매수 비율</div><div class="value" id="krBuy5">-</div></div>
       </div>
       <div class="ratio-bar"><div class="b" id="krBarB">매수</div><div class="d" id="krBarS">매도</div></div>
       <div class="chart-box"><canvas id="krPriceChart"></canvas></div>
@@ -52,13 +58,13 @@
 </div>
 
 <section class="card">
-  <h2>5분 비교표</h2>
-  <div class="sub" id="cmpSub">국내 거래 시간대(정규장 + NXT 프리·애프터마켓)의 같은 5분 구간을 나란히 비교합니다. 매수 비율이 50%를 넘으면 매수 우위로 봅니다.</div>
+  <h2><span class="stepTxt">5분</span> 비교표</h2>
+  <div class="sub" id="cmpSub">국내 거래 시간대(정규장 + NXT 프리·애프터마켓)의 같은 <span class="stepTxt">5분</span> 구간을 나란히 비교합니다. 매수 비율이 50%를 넘으면 매수 우위로 봅니다.</div>
   <div class="kpis" id="cmpStats"></div>
   <div class="table-wrap"><table class="data" id="cmpTable"></table></div>
   <div class="legend-note">
     <span class="agree">같은 방향</span>: 바이낸스 테이커와 국내 체결이 모두 매수 우위(또는 모두 매도 우위) ·
-    <span class="diverge">엇갈림</span>: 한쪽만 매수 우위 · 등락률은 각 시장의 그날 첫 5분 봉 대비입니다.
+    <span class="diverge">엇갈림</span>: 한쪽만 매수 우위 · 등락률은 각 시장의 그날 첫 <span class="stepTxt">5분</span> 봉 대비입니다. 1분 보기에서 롱 계정·상위 롱은 해당 5분 구간 값을 그대로 씁니다.
   </div>
 </section>
 

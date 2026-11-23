@@ -249,7 +249,7 @@
       return;
     }
     segClick("sortSeg", "by", (v) => { state.by = v; loadRank(); });
-    segClick("tfSeg", "tf", (v) => { state.tf = +v; state.scan.clear(); if (state.selected) select(state.selected); });
+    segClick("tfSeg", "tf", (v) => { state.tf = +v; state.scan.clear(); renderRank(); if (state.selected) select(state.selected); });
     $("etfChk").addEventListener("change", (e) => { state.etf = e.target.checked; loadRank(); });
     $("scanBtn").addEventListener("click", scanAll);
     ["capital", "riskPct"].forEach((id) => $(id).addEventListener("input", () => updateCalc()));

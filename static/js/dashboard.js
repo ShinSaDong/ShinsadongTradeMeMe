@@ -6,7 +6,9 @@
   const BN = "https://fapi.binance.com";
   const $ = (id) => document.getElementById(id);
 
-  const state = { selected: 0, charts: {}, exchangeSymbols: null, summaries: {} };
+  const state = { selected: 0, charts: {}, exchangeSymbols: null, summaries: {}, step: 5 };
+  try { if (localStorage.getItem("tm.dashStep") === "1") state.step = 1; } catch (_) {}
+  const stepMs = () => state.step * 60 * 1000;
 
   // ---------- 포맷 ----------
   const pct = (v, d = 1) => (v === null || v === undefined || !isFinite(v) ? "-" : (v * 100).toFixed(d) + "%");
@@ -61,15 +63,19 @@
     }
   }
 
-  async function loadBinance(symbol, limit = 288) {
-    const p = { symbol, period: "5m", limit };
+  // step=1: 1분 봉 1440개(24시간)와 봉 안의 테이커 매수량으로 1분 테이커 비율 계산.
+  // 롱 계정·상위 트레이더 비율은 바이낸스가 5분이 최소라 항상 5분 값을 씀
+  async function loadBinance(symbol, step = 5) {
+    const p = { symbol, period: "5m", limit: 288 };
+    const one = step === 1;
     const [klines, global, top, taker] = await Promise.all([
-      binance("/fapi/v1/klines", { symbol, interval: "5m", limit }),
+      binance("/fapi/v1/klines", { symbol, interval: one ? "1m" : "5m", limit: one ? 1440 : 288 }),
       binance("/futures/data/globalLongShortAccountRatio", p).catch(() => []),
       binance("/futures/data/topLongShortPositionRatio", p).catch(() => []),
-      binance("/futures/data/takerlongshortRatio", p).catch(() => []),
+      one ? Promise.resolve(null) : binance("/futures/data/takerlongshortRatio", p).catch(() => []),
     ]);
-    return { klines: TM.normKlines(klines), global: TM.normLS(global), top: TM.normLS(top), taker: TM.normTaker(taker) };
+    const k = TM.normKlines(klines);
+    return { step, klines: k, global: TM.normLS(global), top: TM.normLS(top), taker: one ? TM.takerFromKlines(k) : TM.normTaker(taker) };
   }
 
   // 국내 데이터: Cloudflare 에서는 /api/kr 함수, GitHub Pages 에서는 빌드 때 받아둔 정적 JSON
@@ -161,22 +167,23 @@
         datasets: [{ label: "가격 (USDT)", data: bn.klines.map((k) => k.c), borderColor: css("--accent"), borderWidth: 1.5, pointRadius: 0, tension: 0.1 }],
       },
     });
-    const labels = bn.global.length ? bn.global : bn.taker;
+    const ms = (bn.step || 5) * 60 * 1000;
+    const labels = bn.step === 1 ? bn.klines : bn.global.length ? bn.global : bn.taker;
     chart("bnRatioChart", {
       type: "line",
       data: {
         labels: labels.map((r) => TM.kstHM(r.ts)),
         datasets: [
-          { label: "롱 계정 %", data: labels.map((r) => valAt(bn.global, r.ts, "long")), borderColor: css("--long"), borderWidth: 1.5, pointRadius: 0 },
-          { label: "상위 트레이더 롱 %", data: labels.map((r) => valAt(bn.top, r.ts, "long")), borderColor: "#a78bfa", borderWidth: 1.2, pointRadius: 0 },
-          { label: "테이커 매수 %", data: labels.map((r) => valAt(bn.taker, r.ts, "ratio")), borderColor: css("--accent"), borderWidth: 1, pointRadius: 0, borderDash: [4, 3] },
+          { label: "롱 계정 %", data: labels.map((r) => valAt(bn.global, r.ts, "long", TM.FIVE)), borderColor: css("--long"), borderWidth: 1.5, pointRadius: 0 },
+          { label: "상위 트레이더 롱 %", data: labels.map((r) => valAt(bn.top, r.ts, "long", TM.FIVE)), borderColor: "#a78bfa", borderWidth: 1.2, pointRadius: 0 },
+          { label: "테이커 매수 %", data: labels.map((r) => valAt(bn.taker, r.ts, "ratio", ms)), borderColor: css("--accent"), borderWidth: 1, pointRadius: 0, borderDash: [4, 3] },
         ],
       },
       options: { scales: { y: pctAxis } },
     });
   }
-  function valAt(series, ts, key) {
-    const r = TM.lookup(series, TM.slot(ts));
+  function valAt(series, ts, key, step = TM.FIVE) {
+    const r = TM.lookup(series, ts, step);
     return r && r[key] !== null ? +(r[key] * 100).toFixed(2) : null;
   }
 
@@ -195,7 +202,7 @@
     const e = body.querySelector(".empty"); if (e) e.remove();
 
     const asOf = kr.fetchedAt ? ` · 데이터 기준 ${new Date(kr.fetchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}` : "";
-    $("krDateLabel").textContent = `${fmtDate(kr.date)} · 08:00~20:00 · 5분 · KST${asOf}`;
+    $("krDateLabel").textContent = `${fmtDate(kr.date)} · 08:00~20:00 · ${state.step}분 · KST${asOf}`;
     // 평일 장중인데 오늘 데이터가 아니거나 15분 넘게 지났으면 경고
     const nowK = new Date(Date.now() + 9 * 3600e3);
     const todayK = nowK.toISOString().slice(0, 10).replace(/-/g, "");
@@ -244,7 +251,7 @@
     const stats = $("cmpStats");
     if (!slots.length) { table.innerHTML = ""; stats.innerHTML = ""; return; }
     const empty = { klines: [], global: [], top: [], taker: [] };
-    const { rows, stats: st } = TM.buildComparison(slots, bn || empty);
+    const { rows, stats: st } = TM.buildComparison(slots, bn || empty, stepMs());
     const k = (label, v) => `<div class="kpi"><div class="label">${label}</div><div class="value">${v}</div></div>`;
     stats.innerHTML =
       k("국내 매수 비율(당일)", pct(st.krBuyAvg)) +
@@ -351,17 +358,23 @@
     const sym = SYMBOLS[state.selected];
     const [kr, bn, inv] = await Promise.all([
       loadKrMinute(sym.krx).catch((e) => ({ error: e.message })),
-      sym.bnResolved ? loadBinance(sym.bnResolved).catch(() => { sym.bnStatus = "error"; return null; }) : Promise.resolve(null),
+      sym.bnResolved ? loadBinance(sym.bnResolved, state.step).catch(() => { sym.bnStatus = "error"; return null; }) : Promise.resolve(null),
       loadKrInvestor(sym.krx).catch((e) => ({ error: e.message })),
     ]);
     if (seq !== state.loadSeq) return; // 그 사이 다른 종목을 눌렀으면 이전 결과는 버림
-    const slots = kr && !kr.error ? TM.tickRuleFiveMin(kr.bars || []) : [];
+    const slots = kr && !kr.error ? TM.tickRule(kr.bars || [], stepMs()) : [];
     renderBinance(sym, bn);
     renderKr(sym, kr, slots);
     renderComparison(sym, slots, bn);
     renderFlow(inv);
     $("lastUpdated").textContent = new Date().toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour12: false });
     if (window.TMRefresh) $("refreshMode").textContent = window.TMRefresh.label();
+  }
+
+  function applyStep() {
+    document.querySelectorAll(".stepTxt").forEach((el) => (el.textContent = state.step + "분"));
+    $("bnStepNote").hidden = state.step !== 1;
+    $("stepSeg").querySelectorAll(".seg-btn").forEach((b) => b.classList.toggle("active", +b.dataset.step === state.step));
   }
 
   async function refreshAll() {
@@ -374,6 +387,13 @@
     const hash = location.hash.replace("#", "");
     const idx = SYMBOLS.findIndex((s) => s.krx === hash);
     if (idx >= 0) state.selected = idx;
+    applyStep();
+    $("stepSeg").querySelectorAll(".seg-btn").forEach((b) => b.addEventListener("click", () => {
+      state.step = +b.dataset.step;
+      try { localStorage.setItem("tm.dashStep", String(state.step)); } catch (_) {}
+      applyStep();
+      loadSelected();
+    }));
     await resolveBinanceSymbols();
     renderTabs();
     renderSummary();
