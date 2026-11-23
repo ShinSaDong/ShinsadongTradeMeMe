@@ -7,14 +7,13 @@ jobs:
       - run: |
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
           for u in \
-            "https://m.stock.naver.com/api/index/KOSPI/trend?pageSize=5&page=1" \
-            "https://m.stock.naver.com/api/index/KOSPI/trend" \
-            "https://m.stock.naver.com/api/index/KOSPI/dealTrend?pageSize=5" \
-            "https://m.stock.naver.com/api/index/KOSPI/investor?pageSize=5" \
-            "https://m.stock.naver.com/api/index/KOSPI/dealTrendInfo?pageSize=5" \
-            "https://m.stock.naver.com/api/index/KOSPI/price?pageSize=5&page=1" \
-            "https://m.stock.naver.com/api/index/KOSPI/programTrend?pageSize=5" \
-            "https://m.stock.naver.com/front-api/index/dealTrend?indexCode=KOSPI&pageSize=5" \
-            "https://m.stock.naver.com/api/index/KOSPI/investorTrend?pageSize=5" ; do
-            echo "=== $u"; curl -s -m 15 -A "$UA" -H "Referer: https://m.stock.naver.com/" -w "\nHTTP %{http_code}\n" "$u" | head -c 900; echo; done
+            "https://m.stock.naver.com/api/index/KOSPI/trend?bizdate=20261110" \
+            "https://m.stock.naver.com/api/index/KOSPI/trend?date=20261110" \
+            "https://m.stock.naver.com/api/index/KOSPI/trend?localTradedAt=2026-11-10" \
+            "https://m.stock.naver.com/api/index/KOSPI/trend/20261110" \
+            "https://m.stock.naver.com/api/index/KOSPI/trendList?pageSize=5" \
+            "https://m.stock.naver.com/api/index/KOSPI/trends?pageSize=5" \
+            "https://m.stock.naver.com/api/index/KOSPI/integration?bizdate=20261110" \
+            "https://m.stock.naver.com/api/index/KOSPI/price?pageSize=30&page=1" ; do
+            echo "=== $u"; curl -s -m 15 -A "$UA" -H "Referer: https://m.stock.naver.com/" -w "\nHTTP %{http_code}\n" "$u" | head -c 400; echo; done
           echo "=== fchart kosdaq"; curl -s -A "$UA" "https://fchart.stock.naver.com/sise.nhn?symbol=KOSDAQ&timeframe=day&count=3&requestType=0" | grep item
