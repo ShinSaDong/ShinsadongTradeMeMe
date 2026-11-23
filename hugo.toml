@@ -14,7 +14,7 @@ summaryLength = 40
   author = "Shinsadong"
   # 구글 애드센스 승인 후 게시자 ID를 넣으면 모든 페이지에 광고 스크립트가 들어갑니다. 예: "ca-pub-1234567890123456"
   adsenseClient = "ca-pub-5739503575089778"
-  contactEmail = "your-email@example.com"
+  contactEmail = "sungs2001@naver.com"
   # 검색 등록 소유 확인 코드: 메타 태그의 content="..." 안쪽 값만 넣으면 모든 페이지 <head> 에 들어갑니다.
   googleSiteVerification = ""
   naverSiteVerification = "7e17bc4597598ef89d19a1529218f1bde2085ac9"
