@@ -41,7 +41,15 @@
     const K = mk("KOSPI"), Q = mk("KOSDAQ");
     const fut = d.fut && isNum(d.fut.frg) ? { frg: d.fut.frg } : null;
     const hasFlow = isNum(K.frg) || isNum(Q.frg);
-    const mK = F.mood("KOSPI", K, fut, [], 5), mQ = F.mood("KOSDAQ", Q, null, [], 5);
+    // 저장 시작 전 날짜는 프로그램·종목 수가 없어 점수 폭이 좁음 → 있는 항목의 최대치 기준으로 비율 보정
+    const W = { "외국인 현물": 25, "기관": 10, "프로그램": 15, "상승·하락 종목 수": 20, "지수 등락률": 15, "선물 외국인": 15 };
+    const norm = (md, full) => {
+      if (!md) return md;
+      const avail = md.parts.reduce((a, p) => a + (W[p.label] || 0), 0);
+      if (!avail || avail >= full) return md;
+      return { ...md, score: Math.max(-100, Math.min(100, Math.round((md.score * full) / avail))) };
+    };
+    const mK = norm(F.mood("KOSPI", K, fut, [], 5), 100), mQ = norm(F.mood("KOSDAQ", Q, null, [], 5), 85);
     const overall = mK ? Math.round(mK.score * 0.65 + (mQ ? mQ.score : mK.score) * 0.35) : null;
     return { K, Q, fut, mK, mQ, overall, hasFlow };
   }
