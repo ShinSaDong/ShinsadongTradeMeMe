@@ -1,0 +1,10 @@
+name: probe
+on: workflow_dispatch
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for c in 005930 000660 042700 009150 011070 007660 353200 222800 007810 195870 277810 454910 108490 005380 KOSPI KOSDAQ; do
+            echo "=== $c"; curl -s -m 15 "https://fchart.stock.naver.com/sise.nhn?symbol=$c&timeframe=day&count=4&requestType=0" | grep -o 'data="[^"]*"'
+          done
