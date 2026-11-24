@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          for c in 005930 000660 042700 009150 011070 007660 353200 222800 007810 195870 277810 454910 108490 005380 KOSPI KOSDAQ; do
-            echo "=== $c"; curl -s -m 15 "https://fchart.stock.naver.com/sise.nhn?symbol=$c&timeframe=day&count=4&requestType=0" | grep -o 'data="[^"]*"'
+          UA="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
+          for c in 005930 000660 042700 009150 011070 007660 353200 222800 007810 195870 277810 454910 108490 005380; do
+            curl -s -m 15 -A "$UA" "https://m.stock.naver.com/api/stock/$c/basic" | python3 -c "import sys,json; d=json.load(sys.stdin); o=d.get('overMarketPriceInfo') or {}; print('$c', d.get('stockName'), d.get('closePrice'), d.get('fluctuationsRatio'), d.get('localTradedAt'), d.get('marketStatus'), '| over', o.get('overPrice'), o.get('fluctuationsRatio'), o.get('tradingSessionType'), o.get('localTradedAt'))"
           done
+          curl -s -m 15 -A "$UA" "https://m.stock.naver.com/api/stock/005930/basic" | head -c 3000
