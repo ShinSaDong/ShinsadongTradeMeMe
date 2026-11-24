@@ -1,0 +1,87 @@
+{{ define "main" }}
+<div class="dash-head">
+  <div>
+    <h1>Binance Long/Short vs Korean Market Flows</h1>
+    <div class="dash-meta"><span class="stepTxt">5-min</span> bars · Binance every 1 min · Korea <span id="refreshMode">1-min intraday / 5-min after close</span> · last update <span id="lastUpdated">-</span></div>
+  </div>
+  <div class="sc-controls">
+    <div class="seg" id="stepSeg">
+      <button type="button" class="seg-btn" data-step="1">1m</button>
+      <button type="button" class="seg-btn active" data-step="5">5m</button>
+    </div>
+    <button class="tab" id="refreshBtn" type="button">Refresh now</button>
+  </div>
+</div>
+
+<div class="notice">
+  Binance data is fetched directly by your browser from Binance's public API. The Korean buy/sell ratio is an <b>estimate</b> split by 1-minute price direction (tick rule), and investor flows are per trading day. For reference only — not investment advice.
+</div>
+
+<div class="summary-grid" id="summaryGrid"></div>
+
+{{ partial "ad.html" . }}
+
+<div class="tabs" id="symbolTabs"></div>
+
+<div class="compare-grid">
+  <section class="card binance">
+    <h2>Binance perpetual futures <span id="bnSymbol" class="sub"></span></h2>
+    <div class="sub">Last 24 hours · <span class="stepTxt">5-min</span> · KST<span id="bnStepNote" hidden> · Binance provides the long-account and top-trader ratios in 5-minute intervals only</span></div>
+    <div id="bnBody">
+      <div class="kpis">
+        <div class="kpi"><div class="label">Price (USDT)</div><div class="value" id="bnPrice">-</div></div>
+        <div class="kpi"><div class="label">Long account ratio</div><div class="value" id="bnLong">-</div></div>
+        <div class="kpi"><div class="label">Top trader long</div><div class="value" id="bnTop">-</div></div>
+        <div class="kpi"><div class="label">Taker buy ratio</div><div class="value" id="bnTaker">-</div></div>
+      </div>
+      <div class="ratio-bar"><div class="l" id="bnBarL">Long</div><div class="s" id="bnBarS">Short</div></div>
+      <div class="chart-box"><canvas id="bnPriceChart"></canvas></div>
+      <div class="chart-box small"><canvas id="bnRatioChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="card krx">
+    <h2>Korean market (KRX) <span id="krCode" class="sub"></span></h2>
+    <div class="sub" id="krDateLabel">08:00–20:00 (incl. NXT) · 5-min · KST</div>
+    <div id="krBody">
+      <div class="kpis">
+        <div class="kpi"><div class="label">Price (KRW)</div><div class="value" id="krPrice">-</div></div>
+        <div class="kpi"><div class="label">Change</div><div class="value" id="krChg">-</div></div>
+        <div class="kpi"><div class="label">Day buy-side volume</div><div class="value" id="krBuy">-</div></div>
+        <div class="kpi"><div class="label">Last <span class="stepTxt">5-min</span> buy ratio</div><div class="value" id="krBuy5">-</div></div>
+      </div>
+      <div class="ratio-bar"><div class="b" id="krBarB">Buy</div><div class="d" id="krBarS">Sell</div></div>
+      <div class="chart-box"><canvas id="krPriceChart"></canvas></div>
+      <div class="chart-box small"><canvas id="krRatioChart"></canvas></div>
+    </div>
+  </section>
+</div>
+
+<section class="card">
+  <h2><span class="stepTxt">5-min</span> comparison table</h2>
+  <div class="sub" id="cmpSub">Compares the same <span class="stepTxt">5-min</span> bars during Korean trading hours (regular session + NXT pre/after-market). A buy ratio above 50% means buyers dominate.</div>
+  <div class="kpis" id="cmpStats"></div>
+  <div class="table-wrap"><table class="data" id="cmpTable"></table></div>
+  <div class="legend-note">
+    <span class="agree">Same direction</span>: Binance takers and Korean trades both buy-dominant (or both sell-dominant) ·
+    <span class="diverge">Diverging</span>: only one side buy-dominant · Change is measured from each market's first <span class="stepTxt">5-min</span> bar of the day. In 1-minute view, the long-account and top-long values reuse the enclosing 5-minute value.
+  </div>
+</section>
+
+<section class="card">
+  <h2>Retail · Foreign · Institutional flows</h2>
+  <div class="sub">Daily net buying (shares) · last 20 trading days</div>
+  <div class="chart-box"><canvas id="flowChart"></canvas></div>
+  <div class="table-wrap"><table class="data" id="flowTable"></table></div>
+</section>
+
+<script>window.TM_CONFIG = { krMode: "{{ site.Params.krDataMode | default "api" }}", krStaticBase: "{{ "data/kr/" | relURL }}" };</script>
+<script id="symbols-data" type="application/json">{{ site.Data.symbols | jsonify | safeJS }}</script>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.js"></script>
+<script src="{{ "js/refresh.js" | relURL }}"></script>
+<script src="{{ "js/analysis.js" | relURL }}"></script>
+<script src="{{ "js/dashboard.js" | relURL }}"></script>
+{{ end }}

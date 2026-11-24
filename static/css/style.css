@@ -302,3 +302,9 @@ table.data .weak { opacity: .7; }
   .ntf-panel { position: fixed; left: 8px; right: 8px; top: 58px; width: auto; max-width: none; max-height: calc(100vh - 70px); overflow-y: auto; }
 }
 .ntf-diag { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: 12px; line-height: 1.6; margin-top: 6px; }
+
+/* 언어 전환 */
+.lang-switch { display: flex; gap: 2px; margin-left: 10px; flex: none; font-size: 12px; font-weight: 700; }
+.lang-switch a { color: var(--muted); padding: 3px 6px; border-radius: 6px; text-decoration: none; }
+.lang-switch a.on { color: #111; background: var(--accent); }
+@media (max-width: 640px) { .lang-switch { margin-left: 4px; } .lang-switch a { padding: 2px 4px; } }

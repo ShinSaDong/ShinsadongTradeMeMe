@@ -37,7 +37,8 @@
     return !lastAt || Date.now() - lastAt >= krInterval() - 10 * 1000;
   }
   function label() {
-    return isMarketOpen() ? "장중 1분 갱신" : "장 마감 후 5분 갱신";
+    const en = !!root.TM_EN;
+    return isMarketOpen() ? (en ? "updating every 1 min (market open)" : "장중 1분 갱신") : (en ? "updating every 5 min (after close)" : "장 마감 후 5분 갱신");
   }
   root.TMRefresh = { isMarketOpen, krInterval, everyMinute, krDue, label };
 })(window);

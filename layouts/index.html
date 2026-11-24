@@ -10,7 +10,7 @@
       <div class="sub">오늘 시장 분위기 <span id="hlAt"></span></div>
       <div class="home-mood"><span id="hlLabel">-</span> <b id="hlScore"></b></div>
     </div>
-    <a class="btn sm" href="{{ "market/" | relURL }}">자세히 →</a>
+    <a class="btn sm" href="{{ "market/" | relLangURL }}">자세히 →</a>
   </div>
   <div class="home-live-grid" id="hlGrid"></div>
 </section>
@@ -25,19 +25,19 @@
 <script id="mcal-notes" type="application/json">{{ site.Data.market_notes | default dict | jsonify | safeJS }}</script>
 
 <div class="feature-grid">
-  <a class="card feature" href="{{ "market/" | relURL }}">
+  <a class="card feature" href="{{ "market/" | relLangURL }}">
     <div class="f-tag">종합투자</div>
     <h3>시장 분위기와 5분 수급</h3>
     <p>코스피·코스닥·코스피200 선물의 개인·외국인·기관, 프로그램 매매를 5분 단위로 모으고, 지수와의 상관관계로 오늘 장을 이끈 수급과 분위기 점수를 보여줍니다.</p>
     <span class="f-go">종합투자 보기 →</span>
   </a>
-  <a class="card feature" href="{{ "dashboard/" | relURL }}">
+  <a class="card feature" href="{{ "dashboard/" | relLangURL }}">
     <div class="f-tag">대시보드</div>
     <h3>바이낸스 롱/숏 vs 국내 장</h3>
     <p>바이낸스에 상장된 삼성전자·SK하이닉스 등 8개 국내주식 선물의 롱/숏·테이커 매수 비율을 국내 장 5분 매수·매도, 투자자별 수급과 나란히 비교합니다.</p>
     <span class="f-go">대시보드 보기 →</span>
   </a>
-  <a class="card feature" href="{{ "scalp/" | relURL }}">
+  <a class="card feature" href="{{ "scalp/" | relLangURL }}">
     <div class="f-tag">단타</div>
     <h3>거래량 상위 50 패턴 진단</h3>
     <p>1분·3분·5분 봉에서 페이크 이탈, 시초가 범위 돌파, 이평선 눌림 등 6가지 패턴을 찾아 매수가·손절가·목표가와 진입 시점을 계산합니다.</p>

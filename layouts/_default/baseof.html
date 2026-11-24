@@ -1,11 +1,15 @@
 <!doctype html>
-<html lang="ko">
+<html lang="{{ site.Language.LanguageCode | default site.Language.Lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
   <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
   <link rel="canonical" href="{{ .Permalink }}">
+  {{ if .IsTranslated }}{{ range .AllTranslations }}<link rel="alternate" hreflang="{{ .Language.Lang }}" href="{{ .Permalink }}">
+  {{ end }}{{ with index (where .AllTranslations "Language.Lang" "ko") 0 }}<link rel="alternate" hreflang="x-default" href="{{ .Permalink }}">{{ end }}{{ end }}
+  <script>window.TM_LANG = "{{ site.Language.Lang }}"; window.TM_HOME = "{{ site.Home.RelPermalink }}";</script>
+  <script src="{{ "js/i18n.js" | relURL }}"></script>
   {{ with site.Params.gaMeasurementId }}<script async src="https://www.googletagmanager.com/gtag/js?id={{ . }}"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ . }}');</script>{{ end }}
   <link rel="manifest" href="{{ "manifest.webmanifest" | relURL }}">
@@ -41,6 +45,6 @@
   {{ partial "footer.html" . }}
   {{ block "scripts" . }}{{ end }}
   {{ with site.Params.cfBeaconToken }}<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "{{ . }}"}'></script>{{ end }}
-  <script src="{{ "js/notify.js" | relURL }}" data-base="{{ "" | relURL }}" data-guide="{{ "posts/2026-11-23-push-alert-guide/" | relURL }}" data-mode="{{ site.Params.krDataMode | default "api" }}"></script>
+  <script src="{{ "js/notify.js" | relURL }}" data-base="{{ "" | relURL }}" data-guide="{{ "posts/2026-11-23-push-alert-guide/" | relLangURL }}" data-mode="{{ site.Params.krDataMode | default "api" }}"></script>
 </body>
 </html>

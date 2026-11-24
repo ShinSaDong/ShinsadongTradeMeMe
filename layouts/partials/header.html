@@ -5,8 +5,18 @@
       {{ $current := . }}
       {{ range site.Menus.main }}
       {{ $href := .URL }}
-      <a href="{{ $href }}" {{ if hasPrefix $current.RelPermalink $href }}class="active"{{ end }}>{{ .Name }}</a>
+      <a href="{{ $href }}" {{ if hasPrefix $current.RelPermalink $href }}{{ if or (ne $href "/") (eq $current.RelPermalink "/") }}class="active"{{ end }}{{ end }}>{{ .Name }}</a>
       {{ end }}
     </nav>
+    <div class="lang-switch" aria-label="Language">
+      {{ $page := . }}
+      {{ range site.Languages }}
+        {{ $lang := .Lang }}
+        {{ $target := "" }}
+        {{ range $page.AllTranslations }}{{ if eq .Language.Lang $lang }}{{ $target = .RelPermalink }}{{ end }}{{ end }}
+        {{ if not $target }}{{ $target = cond (eq $lang "ko") "/" (printf "/%s/" $lang) }}{{ end }}
+        <a href="{{ $target }}" hreflang="{{ $lang }}" class="{{ if eq $lang site.Language.Lang }}on{{ end }}">{{ upper (cond (eq $lang "ko") "ko" $lang) }}</a>
+      {{ end }}
+    </div>
   </div>
 </header>

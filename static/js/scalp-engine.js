@@ -7,6 +7,8 @@
  */
 (function (root) {
   "use strict";
+  const EN = typeof window !== "undefined" && !!window.TM_EN;
+  const T = (ko, en) => (EN ? en : ko);
 
   const MIN = 60 * 1000;
   const KST = 9 * 3600 * 1000;
@@ -155,11 +157,11 @@
           if (!p) break;
           const holding = bars[L].c > support;
           return {
-            id: "bearTrap", no: 1, name: "페이크 이탈", side: "buy",
+            id: "bearTrap", no: 1, name: T("페이크 이탈", "Fake breakdown"), side: "buy",
             at: rb.ts, holding, level: support, plan: p,
             score: 55 + (holding ? 10 : -30) + (rb.v >= avgVol(bars, i, 20) * 2 ? 10 : 0),
-            desc: `${hhmm(b.ts)}에 지지선 ${num(support)}원 아래로 빠졌다가 ${hhmm(rb.ts)}에 거래량을 동반해 회복했습니다. ` +
-              (holding ? "지금도 지지선 위에 있어 재지지 확인 후 접근할 수 있는 자리입니다." : "다시 지지선 아래로 내려와 신호가 약해졌습니다."),
+            desc: T(`${hhmm(b.ts)}에 지지선 ${num(support)}원 아래로 빠졌다가 ${hhmm(rb.ts)}에 거래량을 동반해 회복했습니다. `, `Dropped below support at ${num(support)} KRW at ${hhmm(b.ts)}, then recovered on volume at ${hhmm(rb.ts)}. `) +
+              (holding ? T("지금도 지지선 위에 있어 재지지 확인 후 접근할 수 있는 자리입니다.", "Still above support, so this is a spot to consider after the retest holds.") : T("다시 지지선 아래로 내려와 신호가 약해졌습니다.", "It has fallen back below support, weakening the signal.")),
           };
         }
       }
@@ -195,12 +197,12 @@
     const p = plan(Math.max(top, Math.min(last.c, top * 1.004)), level - 2 * ctx.tick, refHigh, ctx.isEtf);
     if (!p) return null;
     return {
-      id: "trueSupport", no: 2, name: "진짜 지지", side: "buy",
+      id: "trueSupport", no: 2, name: T("진짜 지지", "True support"), side: "buy",
       at: best[best.length - 1].ts, holding: true, level, plan: p,
       score: 45 + Math.min(best.length, 5) * 4 + (volOk ? 10 : -10) + (distPct <= 1 ? 10 : -15),
-      desc: `${num(level)}~${num(top)}원 구간에서 저점이 ${best.length}번 지켜졌습니다. ` +
-        (volOk ? "반등할 때 거래량이 하락할 때보다 많아 매수세가 받치는 모습입니다. " : "다만 반등 거래량이 하락 거래량보다 적어 힘이 약합니다. ") +
-        (distPct <= 1 ? "현재가가 지지 구간 가까이 있어 손절 폭이 짧습니다." : `현재가가 지지 구간보다 ${distPct.toFixed(1)}% 위라 눌림을 기다리는 편이 낫습니다.`),
+      desc: T(`${num(level)}~${num(top)}원 구간에서 저점이 ${best.length}번 지켜졌습니다. `, `Lows held ${best.length} times in the ${num(level)}–${num(top)} KRW zone. `) +
+        (volOk ? T("반등할 때 거래량이 하락할 때보다 많아 매수세가 받치는 모습입니다. ", "Bounce volume exceeds decline volume, so buyers are supporting it. ") : T("다만 반등 거래량이 하락 거래량보다 적어 힘이 약합니다. ", "But bounce volume is lower than decline volume, so it is weak. ")) +
+        (distPct <= 1 ? T("현재가가 지지 구간 가까이 있어 손절 폭이 짧습니다.", "Price is near the support zone, so the stop is tight.") : T(`현재가가 지지 구간보다 ${distPct.toFixed(1)}% 위라 눌림을 기다리는 편이 낫습니다.`, `Price is ${distPct.toFixed(1)}% above support, so waiting for a pullback is better.`)),
     };
   }
 
@@ -220,12 +222,14 @@
         const reclaimed = after.some((x) => x.c > b.h);
         if (reclaimed) return null; // 고점을 다시 넘었으면 경고 해제
         return {
-          id: "upperWick", no: 3, name: "장대 윗꼬리", side: "warn",
+          id: "upperWick", no: 3, name: T("장대 윗꼬리", "Long upper wick"), side: "warn",
           at: b.ts, holding: true, level: b.h, plan: null,
           sellZone: roundTick(Math.max(b.c, b.o), "down", ctx.isEtf),
           score: 70,
-          desc: `${hhmm(b.ts)}에 급등 뒤 긴 윗꼬리(고가 ${num(b.h)}원)가 나왔습니다. 고점에서 파는 힘이 강했다는 뜻입니다. ` +
+          desc: T(`${hhmm(b.ts)}에 급등 뒤 긴 윗꼬리(고가 ${num(b.h)}원)가 나왔습니다. 고점에서 파는 힘이 강했다는 뜻입니다. ` +
             `이후 아직 고가를 다시 넘지 못해 추격 매수는 피하고, 보유 중이라면 ${num(roundTick(Math.max(b.c, b.o), "down", ctx.isEtf))}원 부근에서 일부 정리를 검토할 구간입니다.`,
+            `A long upper wick (high ${num(b.h)} KRW) formed after a spike at ${hhmm(b.ts)}, showing strong selling at the top. ` +
+            `The high has not been reclaimed, so avoid chasing; if holding, consider trimming near ${num(roundTick(Math.max(b.c, b.o), "down", ctx.isEtf))} KRW.`),
         };
       }
     }
@@ -242,14 +246,14 @@
     const orl = Math.min(...orBars.map((b) => b.l));
     const L = bars.length - 1;
     const startIdx = bars.findIndex((b) => b.ts >= open + 15 * MIN);
-    if (startIdx < 0) return { id: "orb", no: 4, name: "시초가 범위", side: "info", at: open, holding: true, level: orh, plan: null, score: 0, orh, orl, desc: `개장 후 15분 범위(${num(orl)}~${num(orh)}원)를 만드는 중입니다. 범위가 정해진 뒤 돌파 여부를 봅니다.` };
+    if (startIdx < 0) return { id: "orb", no: 4, name: T("시초가 범위", "Opening range"), side: "info", at: open, holding: true, level: orh, plan: null, score: 0, orh, orl, desc: T(`개장 후 15분 범위(${num(orl)}~${num(orh)}원)를 만드는 중입니다. 범위가 정해진 뒤 돌파 여부를 봅니다.`, `The first 15-minute range (${num(orl)}–${num(orh)} KRW) is still forming. A breakout is checked once it is set.`) };
     let bi = -1;
     for (let i = startIdx; i <= L; i++) {
       if (bars[i].c > orh && bars[i].v >= avgVol(bars, i, 10) * 1.3) { bi = i; break; }
     }
     if (bi < 0) {
-      return { id: "orb", no: 4, name: "시초가 범위", side: "info", at: open, holding: true, level: orh, plan: null, score: 0, orh, orl,
-        desc: `개장 15분 범위는 ${num(orl)}~${num(orh)}원입니다. 아직 거래량을 동반한 상단 돌파가 없습니다.` };
+      return { id: "orb", no: 4, name: T("시초가 범위", "Opening range"), side: "info", at: open, holding: true, level: orh, plan: null, score: 0, orh, orl,
+        desc: T(`개장 15분 범위는 ${num(orl)}~${num(orh)}원입니다. 아직 거래량을 동반한 상단 돌파가 없습니다.`, `The first 15-minute range is ${num(orl)}–${num(orh)} KRW. No breakout above it on volume yet.`) };
     }
     const h = orh - orl;
     const last = bars[L];
@@ -259,12 +263,12 @@
     const p = plan(orh + ctx.tick, stop, orh + h, ctx.isEtf);
     if (!p) return null;
     return {
-      id: "orb", no: 4, name: "시초가 범위 돌파", side: "buy",
+      id: "orb", no: 4, name: T("시초가 범위 돌파", "Opening range breakout"), side: "buy",
       at: bars[bi].ts, holding, level: orh, plan: p, orh, orl,
       score: 50 + (holding ? 10 : -35) + (retest ? 15 : 0) + (hmOf(bars[bi].ts) <= 1030 ? 5 : -10),
-      desc: `개장 15분 범위(${num(orl)}~${num(orh)}원)를 ${hhmm(bars[bi].ts)}에 거래량과 함께 위로 돌파했습니다. ` +
-        (retest ? "이후 상단을 다시 눌렀다가 지켜내(재지지) 신뢰도가 높아졌습니다. " : "아직 상단 재지지 확인 전입니다. ") +
-        (holding ? "" : "다만 지금은 범위 안으로 되돌아와 돌파가 실패한 상태입니다."),
+      desc: T(`개장 15분 범위(${num(orl)}~${num(orh)}원)를 ${hhmm(bars[bi].ts)}에 거래량과 함께 위로 돌파했습니다. `, `Broke above the first 15-minute range (${num(orl)}–${num(orh)} KRW) on volume at ${hhmm(bars[bi].ts)}. `) +
+        (retest ? T("이후 상단을 다시 눌렀다가 지켜내(재지지) 신뢰도가 높아졌습니다. ", "It then retested and held the range high, raising reliability. ") : T("아직 상단 재지지 확인 전입니다. ", "A retest of the range high has not been confirmed yet. ")) +
+        (holding ? "" : T("다만 지금은 범위 안으로 되돌아와 돌파가 실패한 상태입니다.", "However, price is back inside the range, so the breakout has failed.")),
     };
   }
 
@@ -290,12 +294,12 @@
     const p = plan(trigger ? last.c : ma5[L], Math.min(pullLow, ma20[L]) - ctx.tick, refHigh, ctx.isEtf);
     if (!p) return null;
     return {
-      id: "maPullback", no: 5, name: "이평선 눌림", side: "buy",
+      id: "maPullback", no: 5, name: T("이평선 눌림", "MA pullback"), side: "buy",
       at: bars[touch].ts, holding: true, level: ma20[L], plan: p,
       score: 50 + (volShrink ? 10 : -5) + (trigger ? 15 : 0),
-      desc: `5분선이 20분선 위에 있고 20분선이 오르는 상승 추세입니다. ${hhmm(bars[touch].ts)}에 이평선 부근까지 눌렸고, ` +
-        (volShrink ? "눌림 동안 거래량이 줄었습니다. " : "눌림 거래량이 크게 줄지는 않았습니다. ") +
-        (trigger ? "마지막 봉이 거래량을 늘리며 양봉으로 반등해 진입 신호가 나왔습니다." : "아직 반등 양봉 확인 전이라, 반등 확인 후 진입이 안전합니다."),
+      desc: T(`5분선이 20분선 위에 있고 20분선이 오르는 상승 추세입니다. ${hhmm(bars[touch].ts)}에 이평선 부근까지 눌렸고, `, `Uptrend with MA5 above a rising MA20. Pulled back to the moving averages at ${hhmm(bars[touch].ts)}; `) +
+        (volShrink ? T("눌림 동안 거래량이 줄었습니다. ", "volume shrank during the pullback. ") : T("눌림 거래량이 크게 줄지는 않았습니다. ", "pullback volume did not shrink much. ")) +
+        (trigger ? T("마지막 봉이 거래량을 늘리며 양봉으로 반등해 진입 신호가 나왔습니다.", "The last bar bounced up on rising volume, giving an entry signal.") : T("아직 반등 양봉 확인 전이라, 반등 확인 후 진입이 안전합니다.", "No bounce bar yet; entering after a confirmed bounce is safer.")),
     };
   }
 
@@ -318,13 +322,13 @@
       if (!p) return null;
       const failed = last.c < H * 0.997;
       return {
-        id: "priorHigh", no: 6, name: reBreak ? "전고 재돌파" : "전고 돌파", side: "buy",
+        id: "priorHigh", no: 6, name: reBreak ? T("전고 재돌파", "Prior-high re-break") : T("전고 돌파", "Prior-high breakout"), side: "buy",
         at: bars[j].ts, holding: !failed, level: H, plan: p,
         score: 50 + (pullHeld && pulled ? 15 : 0) + (reBreak ? 15 : 0) + (failed ? -40 : 0),
-        desc: `${hhmm(bars[j].ts)}에 전고점 ${num(H)}원을 거래량과 함께 돌파했습니다. ` +
-          (failed ? "그러나 다시 전고 아래로 밀려 돌파가 실패했습니다(단기 차익 매물 주의)." :
-            pulled ? (reBreak ? "눌림에서 전고를 지지한 뒤 다시 위로 올라 재돌파 신호입니다." : "눌림에서 전고를 지지하는 중이라 재돌파를 기다릴 자리입니다.")
-              : "아직 눌림이 오지 않아 바로 따라 사기보다 전고 부근 눌림을 기다리는 편이 낫습니다."),
+        desc: T(`${hhmm(bars[j].ts)}에 전고점 ${num(H)}원을 거래량과 함께 돌파했습니다. `, `Broke the prior high of ${num(H)} KRW on volume at ${hhmm(bars[j].ts)}. `) +
+          (failed ? T("그러나 다시 전고 아래로 밀려 돌파가 실패했습니다(단기 차익 매물 주의).", "But it slipped back below the prior high, so the breakout failed (watch for profit-taking).") :
+            pulled ? (reBreak ? T("눌림에서 전고를 지지한 뒤 다시 위로 올라 재돌파 신호입니다.", "It held the prior high on the pullback and rose again — a re-break signal.") : T("눌림에서 전고를 지지하는 중이라 재돌파를 기다릴 자리입니다.", "It is holding the prior high on the pullback; wait for a re-break."))
+              : T("아직 눌림이 오지 않아 바로 따라 사기보다 전고 부근 눌림을 기다리는 편이 낫습니다.", "No pullback yet; better to wait for a dip toward the prior high than to chase.")),
       };
     }
     return null;
@@ -333,30 +337,30 @@
   // ---------- 종합 판단 ----------
   function trendOf(bars1m) {
     const b5 = aggregate(bars1m, 5);
-    if (b5.length < 21) return { label: "판단 불가", up: null };
+    if (b5.length < 21) return { label: T("판단 불가", "Not enough data"), up: null };
     const c = b5.map((b) => b.c);
     const m5 = sma(c, 5), m20 = sma(c, 20);
     const L = b5.length - 1;
     const up = m5[L] > m20[L] && m20[L] >= m20[L - 3];
     const down = m5[L] < m20[L] && m20[L] <= m20[L - 3];
-    return { label: up ? "상승" : down ? "하락" : "횡보", up: up ? true : down ? false : null };
+    return { label: up ? T("상승", "Up") : down ? T("하락", "Down") : T("횡보", "Sideways"), up: up ? true : down ? false : null };
   }
 
   function timeAdvice(ts) {
     const hm = hmOf(ts);
-    if (hm < 915) return { phase: "개장 직후", text: "시초가 범위가 만들어지는 중입니다. 15분 범위가 정해질 때까지 기다리는 편이 좋습니다.", penalty: -10 };
-    if (hm < 1030) return { phase: "오전 주도 구간", text: "거래가 가장 활발한 시간대입니다. 시초가 범위 돌파·전고 돌파 신호의 신뢰도가 높습니다.", penalty: 5 };
-    if (hm < 1400) return { phase: "장중", text: "변동이 줄어드는 시간대입니다. 이평선 눌림·진짜 지지처럼 기다렸다 들어가는 기법이 맞습니다.", penalty: 0 };
-    if (hm < 1450) return { phase: "오후", text: "마감 전 방향이 나오는 시간대입니다. 목표가를 짧게 잡는 편이 좋습니다.", penalty: -5 };
-    if (hm <= 1530) return { phase: "마감 임박", text: "신규 진입보다 보유 물량 정리를 우선할 시간입니다.", penalty: -25 };
-    return { phase: "장 마감 후(NXT)", text: "애프터마켓은 거래가 적어 신호가 쉽게 틀립니다. 다음 거래일 계획을 세우는 용도로만 보세요.", penalty: -30 };
+    if (hm < 915) return { phase: T("개장 직후", "Just opened"), text: T("시초가 범위가 만들어지는 중입니다. 15분 범위가 정해질 때까지 기다리는 편이 좋습니다.", "The opening range is forming. It is better to wait until the 15-minute range is set."), penalty: -10 };
+    if (hm < 1030) return { phase: T("오전 주도 구간", "Morning drive"), text: T("거래가 가장 활발한 시간대입니다. 시초가 범위 돌파·전고 돌파 신호의 신뢰도가 높습니다.", "The most active trading window. Opening-range and prior-high breakouts are most reliable."), penalty: 5 };
+    if (hm < 1400) return { phase: T("장중", "Midday"), text: T("변동이 줄어드는 시간대입니다. 이평선 눌림·진짜 지지처럼 기다렸다 들어가는 기법이 맞습니다.", "Volatility fades. Patient setups such as MA pullbacks and true support fit best."), penalty: 0 };
+    if (hm < 1450) return { phase: T("오후", "Afternoon"), text: T("마감 전 방향이 나오는 시간대입니다. 목표가를 짧게 잡는 편이 좋습니다.", "Direction into the close emerges. Keep targets short."), penalty: -5 };
+    if (hm <= 1530) return { phase: T("마감 임박", "Near close"), text: T("신규 진입보다 보유 물량 정리를 우선할 시간입니다.", "Prioritize closing positions over new entries."), penalty: -25 };
+    return { phase: T("장 마감 후(NXT)", "After close (NXT)"), text: T("애프터마켓은 거래가 적어 신호가 쉽게 틀립니다. 다음 거래일 계획을 세우는 용도로만 보세요.", "After-market volume is thin and signals often fail. Use it only to plan the next session."), penalty: -30 };
   }
 
   function analyze(bars1mRaw, opts = {}) {
     const tf = opts.tf || 1;
     const isEtf = !!opts.isEtf;
     const bars1m = sessionBars(bars1mRaw);
-    if (bars1m.length < 15) return { ok: false, reason: "분석할 분봉이 부족합니다 (장 시작 후 15분 이상 필요)." };
+    if (bars1m.length < 15) return { ok: false, reason: T("분석할 분봉이 부족합니다 (장 시작 후 15분 이상 필요).", "Not enough bars to analyze (needs 15+ minutes after the open).") };
     const bars = aggregate(bars1m, tf);
     const ind = indicators(bars1m, bars);
     const L = bars.length - 1;
@@ -396,30 +400,30 @@
     const best = buys[0] || null;
     let action, timing;
     if (warn && (!best || best.finalScore < 70)) {
-      action = { code: "avoid", label: "추격 금지", tone: "warn" };
-      timing = `장대 윗꼬리 이후 고가(${num(warn.level)}원)를 다시 넘기 전까지는 신규 매수를 피하세요.`;
+      action = { code: "avoid", label: T("추격 금지", "Don't chase"), tone: "warn" };
+      timing = T(`장대 윗꼬리 이후 고가(${num(warn.level)}원)를 다시 넘기 전까지는 신규 매수를 피하세요.`, `After the long upper wick, avoid new buys until the high (${num(warn.level)} KRW) is reclaimed.`);
     } else if (!best || best.finalScore < 55) {
-      action = { code: "wait", label: "관망", tone: "neutral" };
+      action = { code: "wait", label: T("관망", "Wait"), tone: "neutral" };
       timing = best && best.finalScore >= 30
-        ? `신호가 약합니다(${best.finalScore}점). ${best.name} 조건이 더 갖춰질 때까지 기다리세요.` +
-          (best.plan.riskPct > 3 ? ` 손절 폭이 ${best.plan.riskPct.toFixed(1)}%로 넓어 단타에 맞지 않습니다.` : "")
-        : "규칙에 맞는 진입 자리가 아직 없습니다.";
+        ? T(`신호가 약합니다(${best.finalScore}점). ${best.name} 조건이 더 갖춰질 때까지 기다리세요.`, `The signal is weak (score ${best.finalScore}). Wait for the ${best.name} setup to develop further.`) +
+          (best.plan.riskPct > 3 ? T(` 손절 폭이 ${best.plan.riskPct.toFixed(1)}%로 넓어 단타에 맞지 않습니다.`, ` The stop is ${best.plan.riskPct.toFixed(1)}% wide — too wide for scalping.`) : "")
+        : T("규칙에 맞는 진입 자리가 아직 없습니다.", "No entry matches the rules yet.");
     } else {
       const p = best.plan;
       const ext = (last.c - p.entry) / p.risk;
       if (last.c <= p.stop) {
-        action = { code: "stop", label: "손절 구간", tone: "sell" };
-        timing = `현재가가 손절가(${num(p.stop)}원) 아래입니다. 보유 중이면 정리, 신규 진입은 하지 않습니다.`;
+        action = { code: "stop", label: T("손절 구간", "Stop zone"), tone: "sell" };
+        timing = T(`현재가가 손절가(${num(p.stop)}원) 아래입니다. 보유 중이면 정리, 신규 진입은 하지 않습니다.`, `Price is below the stop (${num(p.stop)} KRW). Exit if holding; no new entries.`);
       } else if (ext > 1) {
-        action = { code: "chase", label: "눌림 대기", tone: "neutral" };
-        timing = `이미 매수가보다 ${(ext).toFixed(1)}R 올라 추격 구간입니다. ${num(p.entry)}원 부근까지 눌렸다가 지지되면 진입을 검토하세요.`;
+        action = { code: "chase", label: T("눌림 대기", "Wait for dip"), tone: "neutral" };
+        timing = T(`이미 매수가보다 ${(ext).toFixed(1)}R 올라 추격 구간입니다. ${num(p.entry)}원 부근까지 눌렸다가 지지되면 진입을 검토하세요.`, `Already ${(ext).toFixed(1)}R above entry — chasing territory. Consider entering if it dips to around ${num(p.entry)} KRW and holds.`);
       } else if (ext >= -0.5) {
-        action = { code: "buy", label: "진입 검토", tone: "buy" };
-        timing = `지금이 계획한 매수가(${num(p.entry)}원) 부근입니다. 손절가 ${num(p.stop)}원을 먼저 정하고 진입을 검토할 수 있는 구간입니다.` +
-          (p.riskPct > 2 ? ` 손절 폭이 ${p.riskPct.toFixed(1)}%로 넓은 편이라 비중을 줄이세요.` : "");
+        action = { code: "buy", label: T("진입 검토", "Consider entry"), tone: "buy" };
+        timing = T(`지금이 계획한 매수가(${num(p.entry)}원) 부근입니다. 손절가 ${num(p.stop)}원을 먼저 정하고 진입을 검토할 수 있는 구간입니다.`, `Price is near the planned entry (${num(p.entry)} KRW). Set the stop at ${num(p.stop)} KRW first, then consider entering.`) +
+          (p.riskPct > 2 ? T(` 손절 폭이 ${p.riskPct.toFixed(1)}%로 넓은 편이라 비중을 줄이세요.`, ` The stop is fairly wide at ${p.riskPct.toFixed(1)}%, so reduce size.`) : "");
       } else {
-        action = { code: "near", label: "매수가 대기", tone: "neutral" };
-        timing = `현재가가 매수가보다 낮습니다. ${num(p.entry)}원을 회복(재지지)하는 것을 확인한 뒤 진입하세요.`;
+        action = { code: "near", label: T("매수가 대기", "Wait for entry"), tone: "neutral" };
+        timing = T(`현재가가 매수가보다 낮습니다. ${num(p.entry)}원을 회복(재지지)하는 것을 확인한 뒤 진입하세요.`, `Price is below the entry. Enter after it reclaims and holds ${num(p.entry)} KRW.`);
       }
     }
 
@@ -441,7 +445,7 @@
   }
 
   function num(v) {
-    return v === null || v === undefined || !isFinite(v) ? "-" : Math.round(v).toLocaleString("ko-KR");
+    return v === null || v === undefined || !isFinite(v) ? "-" : Math.round(v).toLocaleString(EN ? "en-US" : "ko-KR");
   }
 
   const api = { tickSize, roundTick, sessionBars, aggregate, sma, vwapSeries, analyze, positionSize, hhmm, hmOf, trendOf, timeAdvice };

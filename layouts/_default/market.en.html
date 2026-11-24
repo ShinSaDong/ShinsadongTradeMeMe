@@ -1,0 +1,99 @@
+{{ define "main" }}
+<div class="dash-head">
+  <div>
+    <h1>Market Flow</h1>
+    <div class="dash-meta">KOSPI · KOSDAQ · KOSPI200 futures · <span class="stepTxt">5-min</span> flows · <span id="mkMode">1-min intraday / 5-min after close</span> · as of <span id="mkAt">-</span></div>
+  </div>
+  <div class="sc-controls">
+    <div class="seg" id="stepSeg">
+      <button type="button" class="seg-btn" data-step="1">1m</button>
+      <button type="button" class="seg-btn active" data-step="5">5m</button>
+    </div>
+    <select id="daySel" class="sel"></select>
+    <button type="button" class="tab" id="mkRefresh">Refresh</button>
+  </div>
+</div>
+
+<div class="notice">
+  Flows are built by <b>saving Naver Finance's intraday cumulative figures every minute</b> (weekdays 08:55–16:35 KST). Use the 1m/5m buttons to switch the interval. 1-minute storage began on the afternoon of 2026-11-23, so earlier dates are available in 5-minute intervals only. Gaps in storage are merged into the next interval. KOSPI/KOSDAQ amounts are in KRW (₩100M = 1억); futures follow Naver's units. For reference only — not investment advice.
+</div>
+<div class="notice" id="mkStatic" hidden>Flow storage does not work on this address (GitHub Pages). <a href="https://shinsadongtradememe.com/en/market/">Open the live site →</a></div>
+
+<section class="card mood-card">
+  <div class="mood-head">
+    <div>
+      <div class="sub">Overall market mood</div>
+      <div class="mood-label" id="mdLabel">-</div>
+    </div>
+    <div class="mood-score" id="mdScore">-</div>
+  </div>
+  <div class="gauge"><div class="gauge-mark" id="mdMark"></div></div>
+  <div class="gauge-scale"><span>Bearish −100</span><span>Neutral 0</span><span>Bullish +100</span></div>
+</section>
+
+<div class="mk-cards" id="mkCards"></div>
+
+<div class="tabs" id="mkTabs">
+  <button type="button" class="tab active" data-m="KOSPI">KOSPI</button>
+  <button type="button" class="tab" data-m="KOSDAQ">KOSDAQ</button>
+</div>
+
+<section class="card">
+  <h2 id="stTitle">Flow interpretation</h2>
+  <div class="sub" id="stSub"></div>
+  <ul class="story" id="story"></ul>
+  <div class="parts" id="parts"></div>
+</section>
+
+<div class="compare-grid">
+  <section class="card">
+    <h2>Cumulative flows and index</h2>
+    <div class="sub">Cumulative net buying by retail, foreigners, institutions and program trading (left) · index (right)</div>
+    <div class="chart-box tall"><canvas id="cumChart"></canvas></div>
+  </section>
+  <section class="card">
+    <h2><span class="stepTxt">5-min</span> foreign flow vs index change</h2>
+    <div class="sub">Bars: <span class="stepTxt">5-min</span> change in foreign net buying · Line: <span class="stepTxt">5-min</span> index change (%)</div>
+    <div class="chart-box tall"><canvas id="deltaChart"></canvas></div>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Flow ↔ index correlation</h2>
+  <div class="sub">Same interval: how closely the flow change and index move went together in each <span class="stepTxt">5-min</span> bar · Leading: flow in one <span class="stepTxt">5-min</span> bar vs the index in the next (who moves first). ±0.7+ strong, ±0.4+ moderate.</div>
+  <div class="table-wrap"><table class="data" id="corrTable"></table></div>
+</section>
+
+<section class="card">
+  <h2><span class="stepTxt">5-min</span> flow table</h2>
+  <div class="sub">Change in net buying during each <span class="stepTxt">5-min</span> bar. Latest on top.</div>
+  <div class="table-wrap"><table class="data" id="flowRows"></table></div>
+</section>
+
+<section class="card">
+  <h2>How to read it</h2>
+  <div class="table-wrap">
+    <table class="data rules">
+      <thead><tr><th>Situation</th><th>Interpretation</th></tr></thead>
+      <tbody>
+        <tr><td>Foreigners buy both cash and futures</td><td>The strongest bullish combination. Selling both is the weakest.</td></tr>
+        <tr><td>Foreigners sell cash + buy futures</td><td>May be a hedge of cash selling or arbitrage, so the directional signal is weak.</td></tr>
+        <tr><td>Heavy non-arbitrage program selling</td><td>Foreigners/institutions selling large caps as a basket. Directly pushes the index down.</td></tr>
+        <tr><td>Only retail net buying</td><td>Retail absorbing what foreigners and institutions sell. Rebounds in down markets are often weak.</td></tr>
+        <tr><td>Index up + more decliners</td><td>Concentrated in a few large caps. Don't judge individual stocks by the index alone.</td></tr>
+        <tr><td>Flow with high leading correlation</td><td>That investor group is moving ahead of the index today. Watch for a turn in that flow first.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="legend-note">Mood score: foreign cash ±25, program ±15, futures foreign ±15 (KOSPI), index change ±15, advancers/decliners ±20, institutions ±10. Overall = KOSPI 65% + KOSDAQ 35%.</div>
+</section>
+
+<script>window.TM_CONFIG = { krMode: "{{ site.Params.krDataMode | default "api" }}" };</script>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.js"></script>
+<script src="{{ "js/refresh.js" | relURL }}"></script>
+<script src="{{ "js/flow-engine.js" | relURL }}"></script>
+<script src="{{ "js/market.js" | relURL }}"></script>
+{{ end }}

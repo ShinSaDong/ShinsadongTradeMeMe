@@ -107,7 +107,12 @@ export class FlowStore extends DurableObject {
     const id = await this.subId(endpoint);
     const row = this.sql.exec("SELECT * FROM push_sub WHERE id = ?", id).toArray()[0];
     if (!row) return { ok: false, error: "이 기기는 구독되어 있지 않습니다" };
-    const status = await sendPush(row, { title: "ShinsadongTradeMeMe 테스트 알림", body: "푸시 알림이 정상적으로 도착했습니다.", url: "/", tag: "test" }, await this.vapid(), PUSH_SUBJECT);
+    let en = false;
+    try { en = JSON.parse(row.cfg || "{}").lang === "en"; } catch {}
+    const msg = en
+      ? { title: "ShinsadongTradeMeMe test alert", body: "Push notifications are working.", url: "/en/", tag: "test" }
+      : { title: "ShinsadongTradeMeMe 테스트 알림", body: "푸시 알림이 정상적으로 도착했습니다.", url: "/", tag: "test" };
+    const status = await sendPush(row, msg, await this.vapid(), PUSH_SUBJECT);
     if (status === 404 || status === 410) this.sql.exec("DELETE FROM push_sub WHERE id = ?", id);
     return { ok: status >= 200 && status < 300, status };
   }

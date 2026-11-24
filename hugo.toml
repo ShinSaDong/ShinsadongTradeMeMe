@@ -1,5 +1,4 @@
 baseURL = "https://shinsadongtradememe.com/"
-languageCode = "ko-kr"
 defaultContentLanguage = "ko"
 title = "ShinsadongTradeMeMe"
 timeZone = "Asia/Seoul"
@@ -10,7 +9,6 @@ summaryLength = 40
   pagerSize = 10
 
 [params]
-  description = "코스피·코스닥 실시간 수급과 시장 분위기, 바이낸스 롱/숏 비교, 단타 패턴 분석을 한곳에서 보는 증시 참고 사이트"
   author = "Shinsadong"
   # 구글 애드센스 승인 후 게시자 ID를 넣으면 모든 페이지에 광고 스크립트가 들어갑니다. 예: "ca-pub-1234567890123456"
   adsenseClient = "ca-pub-5739503575089778"
@@ -23,27 +21,62 @@ summaryLength = 40
   cfBeaconToken = ""
   naverSiteVerification = "7e17bc4597598ef89d19a1529218f1bde2085ac9"
 
-[menu]
-  [[menu.main]]
-    name = "종합투자"
-    url = "/market/"
+defaultContentLanguageInSubdir = false
+
+[languages]
+  [languages.ko]
+    languageCode = "ko-KR"
+    languageName = "한국어"
+    languageDirection = "ltr"
     weight = 1
-  [[menu.main]]
-    name = "대시보드"
-    url = "/dashboard/"
+    [languages.ko.params]
+        [[languages.ko.menus.main]]
+      name = "종합투자"
+      pageRef = "/market"
+      weight = 1
+    [[languages.ko.menus.main]]
+      name = "대시보드"
+      pageRef = "/dashboard"
+      weight = 2
+    [[languages.ko.menus.main]]
+      name = "단타"
+      pageRef = "/scalp"
+      weight = 3
+    [[languages.ko.menus.main]]
+      name = "블로그"
+      pageRef = "/posts"
+      weight = 4
+    [[languages.ko.menus.main]]
+      name = "소개"
+      pageRef = "/about"
+      weight = 5
+  [languages.en]
+    languageCode = "en-US"
+    languageName = "English"
+    languageDirection = "ltr"
     weight = 2
-  [[menu.main]]
-    name = "단타"
-    url = "/scalp/"
-    weight = 3
-  [[menu.main]]
-    name = "블로그"
-    url = "/posts/"
-    weight = 4
-  [[menu.main]]
-    name = "소개"
-    url = "/about/"
-    weight = 5
+    [languages.en.params]
+      description = "Real-time KOSPI/KOSDAQ investor flows, market mood, Binance long/short vs. Korean market, and intraday pattern scans in one place."
+    [[languages.en.menus.main]]
+      name = "Market Flow"
+      pageRef = "/market"
+      weight = 1
+    [[languages.en.menus.main]]
+      name = "Dashboard"
+      pageRef = "/dashboard"
+      weight = 2
+    [[languages.en.menus.main]]
+      name = "Scalping"
+      pageRef = "/scalp"
+      weight = 3
+    [[languages.en.menus.main]]
+      name = "Blog"
+      pageRef = "/posts"
+      weight = 4
+    [[languages.en.menus.main]]
+      name = "About"
+      pageRef = "/about"
+      weight = 5
 
 [markup.goldmark.renderer]
   unsafe = true

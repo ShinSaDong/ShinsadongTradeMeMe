@@ -10,13 +10,16 @@
   const GUIDE = (me && me.dataset.guide) || BASE;
   const STATIC = me && me.dataset.mode === "static";
   const KEY = "tm.ntf.";
+  const EN = !!window.TM_EN;
+  const LANG = EN ? "en" : "ko";
+  const T = (ko, en) => (EN ? en : ko);
   const DEF = { on: false, mood: true, frg: true, frgThr: 300, big: true, bigStep: 3000, flip: true, side: true, scalp: true };
 
   const ls = {
     get(k, d) { try { const v = localStorage.getItem(KEY + k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } },
     set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch (_) {} },
   };
-  const cfg = () => Object.assign({}, DEF, ls.get("cfg", {}));
+  const cfg = () => Object.assign({}, DEF, ls.get("cfg", {}), { lang: LANG });
   const saveCfg = (c) => { ls.set("cfg", c); pushSyncCfg(c); };
 
   const UA = navigator.userAgent || "";
@@ -93,15 +96,16 @@
 
   async function pushOn() {
     const perm = await Notification.requestPermission();
-    if (perm !== "granted") throw new Error("알림 권한이 허용되지 않았습니다");
+    if (perm !== "granted") throw new Error(T("알림 권한이 허용되지 않았습니다", "Notification permission was not granted"));
     const reg = await swReg();
     await navigator.serviceWorker.ready;
     const { key } = await fetch(BASE + "api/push/key").then((r) => r.json());
     let sub = await reg.pushManager.getSubscription();
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(key) });
     const r = await post("subscribe", { sub: sub.toJSON(), cfg: cfg() });
-    if (!r.ok) throw new Error(r.error || "등록 실패");
+    if (!r.ok) throw new Error(r.error || T("등록 실패", "Registration failed"));
     ls.set("pushOn", true);
+    ls.set("pushLang", LANG);
   }
   async function pushOff() {
     const sub = await currentSub();
@@ -124,32 +128,32 @@
     wrap.innerHTML = `<button type="button" class="ntf-btn" id="ntfBtn" aria-haspopup="true">🔔 <span id="ntfState">OFF</span></button>
       <div class="ntf-panel" id="ntfPanel" hidden>
         <div class="ntf-sec">
-          <div class="ntf-row ntf-top"><b>📱 푸시 알림</b><span class="ntf-msg" id="ntfPushState"></span></div>
-          <div class="ntf-sub">사이트 서버가 평일 09:00~15:30 동안 1분마다 확인해서 보냅니다. <b>브라우저나 사이트를 닫아도</b> 이 기기로 옵니다.</div>
-          ${!pushSupported && !iosNeedsHome ? `<div class="ntf-warn">이 브라우저는 푸시 알림을 지원하지 않습니다.</div>` : ""}
-          ${iosNeedsHome ? `<div class="ntf-warn">아이폰은 사파리 <b>공유(□↑) → 홈 화면에 추가</b> 후, 홈 화면의 TradeMeMe 아이콘으로 열어야 푸시를 받을 수 있습니다.</div>` : ""}
+          <div class="ntf-row ntf-top"><b>${T("📱 푸시 알림", "📱 Push alerts")}</b><span class="ntf-msg" id="ntfPushState"></span></div>
+          <div class="ntf-sub">${T("사이트 서버가 평일 09:00~15:30 동안 1분마다 확인해서 보냅니다. <b>브라우저나 사이트를 닫아도</b> 이 기기로 옵니다.", "The site server checks every minute on weekdays 09:00–15:30 KST and sends them. They arrive on this device <b>even with the browser or site closed</b>.")}</div>
+          ${!pushSupported && !iosNeedsHome ? `<div class="ntf-warn">${T("이 브라우저는 푸시 알림을 지원하지 않습니다.", "This browser does not support push notifications.")}</div>` : ""}
+          ${iosNeedsHome ? `<div class="ntf-warn">${T("아이폰은 사파리 <b>공유(□↑) → 홈 화면에 추가</b> 후, 홈 화면의 TradeMeMe 아이콘으로 열어야 푸시를 받을 수 있습니다.", "On iPhone, tap Safari <b>Share (□↑) → Add to Home Screen</b>, then open the site from the TradeMeMe home-screen icon to receive push alerts.")}</div>` : ""}
           <div class="ntf-row">
-            <button type="button" class="tab" id="ntfPushBtn" ${!pushSupported ? "disabled" : ""}>이 기기에서 푸시 받기</button>
-            <button type="button" class="tab" id="ntfPushTest" hidden>푸시 테스트</button>
-            <button type="button" class="tab" id="ntfDiag" ${!pushSupported ? "disabled" : ""}>알림 진단</button>
+            <button type="button" class="tab" id="ntfPushBtn" ${!pushSupported ? "disabled" : ""}>${T("이 기기에서 푸시 받기", "Get push on this device")}</button>
+            <button type="button" class="tab" id="ntfPushTest" hidden>${T("푸시 테스트", "Test push")}</button>
+            <button type="button" class="tab" id="ntfDiag" ${!pushSupported ? "disabled" : ""}>${T("알림 진단", "Diagnose")}</button>
           </div>
           <div class="ntf-diag" id="ntfDiagOut" hidden></div>
         </div>
         ${tabSupported ? `<div class="ntf-sec">
-          <div class="ntf-row ntf-top"><b>💻 PC 탭 알림</b><label class="ntf-switch"><input type="checkbox" id="ntfOn"> 켜기</label></div>
-          <div class="ntf-sub">사이트 탭이 열려 있을 때만 이 PC 오른쪽 아래에 띄웁니다. 단타 "진입 검토" 알림은 이 방식으로만 받을 수 있습니다.</div>
+          <div class="ntf-row ntf-top"><b>${T("💻 PC 탭 알림", "💻 PC tab alerts")}</b><label class="ntf-switch"><input type="checkbox" id="ntfOn"> ${T("켜기", "On")}</label></div>
+          <div class="ntf-sub">${T("사이트 탭이 열려 있을 때만 이 PC 오른쪽 아래에 띄웁니다. 단타 \"진입 검토\" 알림은 이 방식으로만 받을 수 있습니다.", "Shown in the corner of this PC only while a site tab is open. Scalping \"consider entry\" alerts are available only this way.")}</div>
         </div>` : ""}
         <div class="ntf-sec">
-          <div class="ntf-row ntf-top"><b>알림 조건</b></div>
-          <label class="ntf-row"><input type="checkbox" data-k="mood"> 시장 분위기 단계 변화 (중립→약세 등)</label>
-          <label class="ntf-row"><input type="checkbox" data-k="frg"> 외국인·기관 5분 대량 매수/매도 · 코스피 <input type="number" id="ntfThr" min="10" step="50" class="ntf-num">억 이상 (코스닥 1/3)</label>
-          <label class="ntf-row"><input type="checkbox" data-k="big"> 외국인·기관 누적 대량 돌파 · 코스피 <input type="number" id="ntfStep" min="100" step="500" class="ntf-num">억 단위 (코스닥 1/3)</label>
-          <label class="ntf-row"><input type="checkbox" data-k="flip"> 외국인·프로그램 순매수↔순매도 전환</label>
-          <label class="ntf-row"><input type="checkbox" data-k="side"> 코스피·코스닥 사이드카 근접·발동 조건 도달</label>
-          ${tabSupported ? `<label class="ntf-row"><input type="checkbox" data-k="scalp"> 단타 "진입 검토" 새 종목 (PC 탭 알림 전용 · 단타 화면을 열어 두면 5분마다 자동 스캔)</label>` : ""}
+          <div class="ntf-row ntf-top"><b>${T("알림 조건", "Alert conditions")}</b></div>
+          <label class="ntf-row"><input type="checkbox" data-k="mood"> ${T("시장 분위기 단계 변화 (중립→약세 등)", "Market mood level change (e.g. neutral → bearish)")}</label>
+          <label class="ntf-row"><input type="checkbox" data-k="frg"> ${T("외국인·기관 5분 대량 매수/매도 · 코스피", "Large 5-min foreign/institutional buying or selling · KOSPI ≥")} <input type="number" id="ntfThr" min="10" step="50" class="ntf-num">${T("억 이상 (코스닥 1/3)", "×₩100M (KOSDAQ 1/3)")}</label>
+          <label class="ntf-row"><input type="checkbox" data-k="big"> ${T("외국인·기관 누적 대량 돌파 · 코스피", "Foreign/institutional cumulative milestones · KOSPI every")} <input type="number" id="ntfStep" min="100" step="500" class="ntf-num">${T("억 단위 (코스닥 1/3)", "×₩100M (KOSDAQ 1/3)")}</label>
+          <label class="ntf-row"><input type="checkbox" data-k="flip"> ${T("외국인·프로그램 순매수↔순매도 전환", "Foreign/program flips between net buying and selling")}</label>
+          <label class="ntf-row"><input type="checkbox" data-k="side"> ${T("코스피·코스닥 사이드카 근접·발동 조건 도달", "KOSPI/KOSDAQ sidecar approaching or triggered")}</label>
+          ${tabSupported ? `<label class="ntf-row"><input type="checkbox" data-k="scalp"> ${T("단타 \"진입 검토\" 새 종목 (PC 탭 알림 전용 · 단타 화면을 열어 두면 5분마다 자동 스캔)", "New scalping \"consider entry\" stocks (PC tab alerts only · auto-scans every 5 min while the Scalping page is open)")}</label>` : ""}
         </div>
         <div class="ntf-row"><span class="ntf-msg" id="ntfMsg"></span></div>
-        <div class="ntf-row"><a href="${GUIDE}">PC · 안드로이드 · 아이폰 설정 방법 보기 →</a></div>
+        <div class="ntf-row"><a href="${GUIDE}">${T("PC · 안드로이드 · 아이폰 설정 방법 보기 →", "Setup guide for PC · Android · iPhone →")}</a></div>
       </div>`;
     nav.appendChild(wrap);
     const $ = (id) => document.getElementById(id);
@@ -162,17 +166,17 @@
       if (!pushActive && ls.get("pushOn", false) && pushSupported) ls.set("pushOn", false);
       const tabOn = c.on && granted() && tabSupported;
       const on = pushActive || tabOn;
-      $("ntfState").textContent = on ? (pushActive ? "푸시 ON" : "ON") : "OFF";
+      $("ntfState").textContent = on ? (pushActive ? T("푸시 ON", "Push ON") : "ON") : "OFF";
       $("ntfBtn").classList.toggle("on", on);
-      $("ntfPushState").textContent = pushActive ? "이 기기 받는 중" : "꺼짐";
-      $("ntfPushBtn").textContent = pushActive ? "이 기기 푸시 끄기" : "이 기기에서 푸시 받기";
+      $("ntfPushState").textContent = pushActive ? T("이 기기 받는 중", "receiving on this device") : T("꺼짐", "off");
+      $("ntfPushBtn").textContent = pushActive ? T("이 기기 푸시 끄기", "Turn off push on this device") : T("이 기기에서 푸시 받기", "Get push on this device");
       $("ntfPushTest").hidden = !pushActive;
       if ($("ntfOn")) $("ntfOn").checked = tabOn;
       wrap.querySelectorAll("input[data-k]").forEach((el) => (el.checked = !!c[el.dataset.k]));
       $("ntfThr").value = c.frgThr;
       $("ntfStep").value = c.bigStep;
       if ("Notification" in window && Notification.permission === "denied") {
-        msg(isIOS ? "알림이 차단돼 있습니다. 아이폰 설정 → 알림 → TradeMeMe에서 허용해 주세요." : "알림이 차단돼 있습니다. 주소창 왼쪽 자물쇠(사이트 설정) → 알림 → 허용으로 바꿔 주세요.");
+        msg(isIOS ? T("알림이 차단돼 있습니다. 아이폰 설정 → 알림 → TradeMeMe에서 허용해 주세요.", "Notifications are blocked. Allow them in iPhone Settings → Notifications → TradeMeMe.") : T("알림이 차단돼 있습니다. 주소창 왼쪽 자물쇠(사이트 설정) → 알림 → 허용으로 바꿔 주세요.", "Notifications are blocked. Click the lock (site settings) left of the address bar → Notifications → Allow."));
       }
     }
 
@@ -181,46 +185,46 @@
 
     $("ntfPushBtn").addEventListener("click", async () => {
       const btn = $("ntfPushBtn");
-      btn.disabled = true; msg("처리 중…");
+      btn.disabled = true; msg(T("처리 중…", "Working…"));
       try {
-        if (ls.get("pushOn", false) && (await currentSub())) { await pushOff(); msg("이 기기의 푸시 알림을 껐습니다."); }
-        else { await pushOn(); msg("등록됐습니다. '푸시 테스트'로 도착하는지 확인해 보세요."); }
-      } catch (e) { msg("푸시 등록 실패: " + (e.message || e)); }
+        if (ls.get("pushOn", false) && (await currentSub())) { await pushOff(); msg(T("이 기기의 푸시 알림을 껐습니다.", "Push alerts turned off on this device.")); }
+        else { await pushOn(); msg(T("등록됐습니다. '푸시 테스트'로 도착하는지 확인해 보세요.", "Registered. Use 'Test push' to check that alerts arrive.")); }
+      } catch (e) { msg(T("푸시 등록 실패: ", "Push registration failed: ") + (e.message || e)); }
       btn.disabled = false; sync();
     });
     $("ntfPushTest").addEventListener("click", async () => {
-      msg("보내는 중…");
+      msg(T("보내는 중…", "Sending…"));
       try {
         const sub = await currentSub();
-        const r = sub ? await post("test", { endpoint: sub.endpoint }) : { ok: false, error: "구독 정보가 없습니다" };
-        msg(r.ok ? "보냈습니다. 몇 초 안에 알림이 와야 합니다." : "실패: " + (r.error || r.status));
-      } catch (e) { msg("실패: " + (e.message || e)); }
+        const r = sub ? await post("test", { endpoint: sub.endpoint }) : { ok: false, error: T("구독 정보가 없습니다", "No subscription found") };
+        msg(r.ok ? T("보냈습니다. 몇 초 안에 알림이 와야 합니다.", "Sent. An alert should arrive within a few seconds.") : T("실패: ", "Failed: ") + (r.error || r.status));
+      } catch (e) { msg(T("실패: ", "Failed: ") + (e.message || e)); }
     });
     // 진단: 서버를 거치지 않고 서비스 워커가 직접 알림을 띄워 봄 → 표시 경로 확인 + 상태 요약
     $("ntfDiag").addEventListener("click", async () => {
       const out = $("ntfDiagOut");
       const L = [];
-      const b = /Edg\//.test(UA) ? "Edge" : /Whale\//.test(UA) ? "Whale" : /SamsungBrowser/.test(UA) ? "삼성 인터넷" : /Firefox\//.test(UA) ? "Firefox" : /Chrome\//.test(UA) ? "Chrome" : /Safari\//.test(UA) ? "Safari" : "기타";
-      L.push(`브라우저: ${b}${isIOS ? (standalone ? " (홈 화면 앱)" : " (사파리 탭)") : ""}`);
-      L.push(`알림 권한: ${"Notification" in window ? Notification.permission : "없음"}`);
+      const b = /Edg\//.test(UA) ? "Edge" : /Whale\//.test(UA) ? "Whale" : /SamsungBrowser/.test(UA) ? "Samsung Internet" : /Firefox\//.test(UA) ? "Firefox" : /Chrome\//.test(UA) ? "Chrome" : /Safari\//.test(UA) ? "Safari" : T("기타", "Other");
+      L.push(`${T("브라우저", "Browser")}: ${b}${isIOS ? (standalone ? T(" (홈 화면 앱)", " (home-screen app)") : T(" (사파리 탭)", " (Safari tab)")) : ""}`);
+      L.push(`${T("알림 권한", "Permission")}: ${"Notification" in window ? Notification.permission : T("없음", "none")}`);
       let reg = null, sub = null;
       try { reg = await navigator.serviceWorker.getRegistration(BASE); } catch (_) {}
-      L.push(`서비스 워커: ${reg && reg.active ? "동작 중" : reg ? "설치 중" : "없음"}`);
+      L.push(`${T("서비스 워커", "Service worker")}: ${reg && reg.active ? T("동작 중", "active") : reg ? T("설치 중", "installing") : T("없음", "none")}`);
       try { sub = reg ? await reg.pushManager.getSubscription() : null; } catch (_) {}
-      L.push(`푸시 등록: ${sub ? "있음 (" + new URL(sub.endpoint).host + ")" : "없음"}`);
-      let shown = "건너뜀";
+      L.push(`${T("푸시 등록", "Push subscription")}: ${sub ? T("있음", "yes") + " (" + new URL(sub.endpoint).host + ")" : T("없음", "none")}`);
+      let shown = T("건너뜀", "skipped");
       if (reg && granted()) {
         try {
-          await reg.showNotification("알림 진단 (서버 없이 직접)", { body: "이 알림이 보이면 이 기기의 알림 표시는 정상입니다.", tag: "diag", icon: BASE + "icons/icon-192.png" });
+          await reg.showNotification(T("알림 진단 (서버 없이 직접)", "Alert diagnostic (direct, no server)"), { body: T("이 알림이 보이면 이 기기의 알림 표시는 정상입니다.", "If you see this, notifications display correctly on this device."), tag: "diag", icon: BASE + "icons/icon-192.png" });
           const list = await reg.getNotifications({ tag: "diag" });
-          shown = list.length ? "브라우저가 띄움" : "브라우저가 띄우지 못함";
-        } catch (e) { shown = "실패: " + (e.message || e); }
+          shown = list.length ? T("브라우저가 띄움", "shown by browser") : T("브라우저가 띄우지 못함", "browser could not show it");
+        } catch (e) { shown = T("실패: ", "failed: ") + (e.message || e); }
       }
-      L.push(`직접 알림: ${shown}`);
+      L.push(`${T("직접 알림", "Direct alert")}: ${shown}`);
       if (sub) {
-        try { const r = await post("test", { endpoint: sub.endpoint }); L.push(`서버 푸시: ${r.ok ? "전송 성공 (" + r.status + ")" : "실패 " + (r.error || r.status)}`); } catch (e) { L.push("서버 푸시: 요청 실패"); }
+        try { const r = await post("test", { endpoint: sub.endpoint }); L.push(`${T("서버 푸시", "Server push")}: ${r.ok ? T("전송 성공", "sent") + " (" + r.status + ")" : T("실패 ", "failed ") + (r.error || r.status)}`); } catch (e) { L.push(T("서버 푸시: 요청 실패", "Server push: request failed")); }
       }
-      L.push("→ '직접 알림'이 화면에 안 보이면 윈도우/휴대폰의 알림 설정 문제, 직접 알림은 보이는데 서버 푸시만 안 오면 푸시 수신 문제입니다.");
+      L.push(T("→ '직접 알림'이 화면에 안 보이면 윈도우/휴대폰의 알림 설정 문제, 직접 알림은 보이는데 서버 푸시만 안 오면 푸시 수신 문제입니다.", "→ If the direct alert does not appear, check your Windows/phone notification settings. If it appears but server push does not, the problem is push delivery."));
       out.hidden = false;
       out.innerHTML = L.map((x) => `<div>${x}</div>`).join("");
     });
@@ -230,7 +234,7 @@
       if (e.target.checked) {
         const p = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
         c.on = p === "granted";
-        if (c.on) { try { new Notification("ShinsadongTradeMeMe", { body: "PC 탭 알림이 켜졌습니다.", tag: "test" }); } catch (_) {} }
+        if (c.on) { try { new Notification("ShinsadongTradeMeMe", { body: T("PC 탭 알림이 켜졌습니다.", "PC tab alerts are on."), tag: "test" }); } catch (_) {} }
       } else c.on = false;
       saveCfg(c); sync();
       if (c.on) checkMarket();
@@ -246,7 +250,11 @@
     ui();
     if (STATIC) return;
     // 이미 푸시를 켠 기기는 서비스 워커를 최신으로 유지
-    if (pushSupported && ls.get("pushOn", false)) swReg().catch(() => {});
+    if (pushSupported && ls.get("pushOn", false)) {
+      swReg().catch(() => {});
+      // 언어를 바꿔 보고 있으면 서버 알림 문구 언어도 맞춤
+      if (ls.get("pushLang", "ko") !== LANG) { ls.set("pushLang", LANG); pushSyncCfg(cfg()); }
+    }
     const wait = 60e3 - (Date.now() % 60e3) + 20e3;
     setTimeout(() => { checkMarket(); setInterval(checkMarket, 60e3); }, wait);
     checkMarket();

@@ -7,30 +7,39 @@
 #   SAMSUNGEMUSDT, HANMIUSDT, LGELECTRONICSUSDT, NAVERUSDT, KODEX200USDT (2026-08-14 상장)
 # 국내 관련 해외 상장 상품: EWYUSDT, KORUUSDT, SKHYUSDT, SKUUUSDT, SKDDUSDT (미국), CSOPSAMSUNG2LUSDT, CSOPSKHYNIX2LUSDT (홍콩)
 - name: 삼성전자
+  en: Samsung Electronics
   krx: "005930"
   binance: SAMSUNGUSDT
 - name: SK하이닉스
+  en: SK hynix
   krx: "000660"
   binance: SKHYNIXUSDT
 - name: 현대차
+  en: Hyundai Motor
   krx: "005380"
   binance: HYUNDAIUSDT
 - name: LG전자
+  en: LG Electronics
   krx: "066570"
   binance: LGELECTRONICSUSDT
 - name: NAVER
+  en: NAVER
   krx: "035420"
   binance: NAVERUSDT
 - name: 삼성전기
+  en: Samsung Electro-Mechanics
   krx: "009150"
   binance: SAMSUNGEMUSDT
 - name: 한미반도체
+  en: Hanmi Semiconductor
   krx: "042700"
   binance: HANMIUSDT
 - name: KODEX 200
+  en: KODEX 200
   krx: "069500"
   binance: KODEX200USDT
 - name: LG에너지솔루션
+  en: LG Energy Solution
   krx: "373220"
   binance: ""
   detect: [LGES, LGENERGY]

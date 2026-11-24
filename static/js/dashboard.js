@@ -2,7 +2,9 @@
 (function () {
   "use strict";
   const TM = window.TM;
-  const SYMBOLS = JSON.parse(document.getElementById("symbols-data").textContent || "[]");
+  const T = window.L || ((ko) => ko);
+  const LOC = window.TM_LOCALE || "ko-KR";
+  const SYMBOLS = JSON.parse(document.getElementById("symbols-data").textContent || "[]").map((s) => (window.TM_EN && s.en ? { ...s, name: s.en } : s));
   const BN = "https://fapi.binance.com";
   const $ = (id) => document.getElementById(id);
 
@@ -13,7 +15,7 @@
   // ---------- 포맷 ----------
   const pct = (v, d = 1) => (v === null || v === undefined || !isFinite(v) ? "-" : (v * 100).toFixed(d) + "%");
   const sPct = (v, d = 2) => (v === null || v === undefined || !isFinite(v) ? "-" : (v > 0 ? "+" : "") + v.toFixed(d) + "%");
-  const num = (v, d = 0) => (v === null || v === undefined || !isFinite(v) ? "-" : Number(v).toLocaleString("ko-KR", { maximumFractionDigits: d, minimumFractionDigits: d }));
+  const num = (v, d = 0) => (v === null || v === undefined || !isFinite(v) ? "-" : Number(v).toLocaleString(LOC, { maximumFractionDigits: d, minimumFractionDigits: d }));
   const signCls = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
   const fmtDate = (d) => (d ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : "-");
 
@@ -137,14 +139,14 @@
 
   // ---------- 렌더: 바이낸스 ----------
   function renderBinance(sym, bn) {
-    $("bnSymbol").textContent = sym.bnResolved ? `· ${sym.bnResolved}${sym.bnStatus === "detected" ? " (자동 감지)" : ""}` : "";
+    $("bnSymbol").textContent = sym.bnResolved ? `· ${sym.bnResolved}${sym.bnStatus === "detected" ? T(" (자동 감지)", " (auto-detected)") : ""}` : "";
     const body = $("bnBody");
     if (!bn) {
       body.dataset.empty = "1";
       body.querySelectorAll(".chart-box, .kpis, .ratio-bar").forEach((el) => (el.style.display = "none"));
       let e = body.querySelector(".empty");
       if (!e) { e = document.createElement("div"); e.className = "empty"; body.appendChild(e); }
-      e.textContent = sym.bnStatus === "error" ? "바이낸스 데이터를 불러오지 못했습니다." : `${sym.name}은(는) 아직 바이낸스 선물에 상장되지 않았습니다.`;
+      e.textContent = sym.bnStatus === "error" ? T("바이낸스 데이터를 불러오지 못했습니다.", "Could not load Binance data.") : T(`${sym.name}은(는) 아직 바이낸스 선물에 상장되지 않았습니다.`, `${sym.name} is not yet listed on Binance futures.`);
       return;
     }
     body.querySelectorAll(".chart-box, .kpis, .ratio-bar").forEach((el) => (el.style.display = ""));
@@ -158,13 +160,13 @@
     $("bnLong").textContent = lastG ? pct(lastG.long) : "-";
     $("bnTop").textContent = lastT ? pct(lastT.long) : "-";
     $("bnTaker").textContent = lastTk ? pct(lastTk.ratio) : "-";
-    setBar("bnBarL", "bnBarS", lastG ? lastG.long : null, "롱", "숏");
+    setBar("bnBarL", "bnBarS", lastG ? lastG.long : null, T("롱", "Long"), T("숏", "Short"));
 
     chart("bnPriceChart", {
       type: "line",
       data: {
         labels: bn.klines.map((k) => TM.kstHM(k.ts)),
-        datasets: [{ label: "가격 (USDT)", data: bn.klines.map((k) => k.c), borderColor: css("--accent"), borderWidth: 1.5, pointRadius: 0, tension: 0.1 }],
+        datasets: [{ label: T("가격 (USDT)", "Price (USDT)"), data: bn.klines.map((k) => k.c), borderColor: css("--accent"), borderWidth: 1.5, pointRadius: 0, tension: 0.1 }],
       },
     });
     const ms = (bn.step || 5) * 60 * 1000;
@@ -174,9 +176,9 @@
       data: {
         labels: labels.map((r) => TM.kstHM(r.ts)),
         datasets: [
-          { label: "롱 계정 %", data: labels.map((r) => valAt(bn.global, r.ts, "long", TM.FIVE)), borderColor: css("--long"), borderWidth: 1.5, pointRadius: 0 },
-          { label: "상위 트레이더 롱 %", data: labels.map((r) => valAt(bn.top, r.ts, "long", TM.FIVE)), borderColor: "#a78bfa", borderWidth: 1.2, pointRadius: 0 },
-          { label: "테이커 매수 %", data: labels.map((r) => valAt(bn.taker, r.ts, "ratio", ms)), borderColor: css("--accent"), borderWidth: 1, pointRadius: 0, borderDash: [4, 3] },
+          { label: T("롱 계정 %", "Long accounts %"), data: labels.map((r) => valAt(bn.global, r.ts, "long", TM.FIVE)), borderColor: css("--long"), borderWidth: 1.5, pointRadius: 0 },
+          { label: T("상위 트레이더 롱 %", "Top trader long %"), data: labels.map((r) => valAt(bn.top, r.ts, "long", TM.FIVE)), borderColor: "#a78bfa", borderWidth: 1.2, pointRadius: 0 },
+          { label: T("테이커 매수 %", "Taker buy %"), data: labels.map((r) => valAt(bn.taker, r.ts, "ratio", ms)), borderColor: css("--accent"), borderWidth: 1, pointRadius: 0, borderDash: [4, 3] },
         ],
       },
       options: { scales: { y: pctAxis } },
@@ -195,14 +197,14 @@
       body.querySelectorAll(".chart-box, .kpis, .ratio-bar").forEach((el) => (el.style.display = "none"));
       let e = body.querySelector(".empty");
       if (!e) { e = document.createElement("div"); e.className = "empty"; body.appendChild(e); }
-      e.textContent = kr && kr.error ? `국내 데이터를 불러오지 못했습니다: ${kr.error}` : "국내 장 데이터가 없습니다.";
+      e.textContent = kr && kr.error ? T(`국내 데이터를 불러오지 못했습니다: ${kr.error}`, `Could not load Korean data: ${kr.error}`) : T("국내 장 데이터가 없습니다.", "No Korean market data.");
       return;
     }
     body.querySelectorAll(".chart-box, .kpis, .ratio-bar").forEach((el) => (el.style.display = ""));
     const e = body.querySelector(".empty"); if (e) e.remove();
 
-    const asOf = kr.fetchedAt ? ` · 데이터 기준 ${new Date(kr.fetchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}` : "";
-    $("krDateLabel").textContent = `${fmtDate(kr.date)} · 08:00~20:00 · ${state.step}분 · KST${asOf}`;
+    const asOf = kr.fetchedAt ? ` · ${T("데이터 기준", "data as of")} ${new Date(kr.fetchedAt).toLocaleString(LOC, { timeZone: "Asia/Seoul", hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}` : "";
+    $("krDateLabel").textContent = `${fmtDate(kr.date)} · 08:00~20:00 · ${state.step}${T("분", "-min")} · KST${asOf}`;
     // 평일 장중인데 오늘 데이터가 아니거나 15분 넘게 지났으면 경고
     const nowK = new Date(Date.now() + 9 * 3600e3);
     const todayK = nowK.toISOString().slice(0, 10).replace(/-/g, "");
@@ -214,8 +216,8 @@
     if (stale) {
       if (!warn) { warn = document.createElement("div"); warn.className = "notice stale"; body.prepend(warn); }
       warn.textContent = kr.date !== todayK
-        ? `⚠️ 국내 데이터가 아직 오늘 것으로 갱신되지 않았습니다 (현재 ${fmtDate(kr.date)} 기준).`
-        : `⚠️ 국내 데이터가 ${Math.round(ageMin)}분 전 기준입니다. 갱신이 지연되고 있습니다.`;
+        ? T(`⚠️ 국내 데이터가 아직 오늘 것으로 갱신되지 않았습니다 (현재 ${fmtDate(kr.date)} 기준).`, `⚠️ Korean data has not been updated for today yet (currently ${fmtDate(kr.date)}).`)
+        : T(`⚠️ 국내 데이터가 ${Math.round(ageMin)}분 전 기준입니다. 갱신이 지연되고 있습니다.`, `⚠️ Korean data is ${Math.round(ageMin)} minutes old. Updates are delayed.`);
     } else if (warn) warn.remove();
     const last = slots[slots.length - 1];
     const basic = kr.basic || {};
@@ -226,19 +228,19 @@
     $("krBuy").textContent = pct(dayRatio);
     const lastWithVol = slots.slice().reverse().find((s) => s.ratio !== null);
     $("krBuy5").textContent = pct(lastWithVol ? lastWithVol.ratio : null);
-    setBar("krBarB", "krBarS", dayRatio, "매수", "매도");
+    setBar("krBarB", "krBarS", dayRatio, T("매수", "Buy"), T("매도", "Sell"));
 
     const labels = slots.map((s) => TM.kstHM(s.ts));
     chart("krPriceChart", {
       type: "line",
-      data: { labels, datasets: [{ label: "가격 (원)", data: slots.map((s) => s.close), borderColor: css("--up"), borderWidth: 1.5, pointRadius: 0, tension: 0.1 }] },
+      data: { labels, datasets: [{ label: T("가격 (원)", "Price (KRW)"), data: slots.map((s) => s.close), borderColor: css("--up"), borderWidth: 1.5, pointRadius: 0, tension: 0.1 }] },
     });
     chart("krRatioChart", {
       type: "bar",
       data: {
         labels,
         datasets: [
-          { label: "매수 체결 %", data: slots.map((s) => (s.ratio === null ? null : +(s.ratio * 100).toFixed(1))), backgroundColor: slots.map((s) => (s.ratio >= 0.5 ? css("--up") : css("--down"))) },
+          { label: T("매수 체결 %", "Buy-side %"), data: slots.map((s) => (s.ratio === null ? null : +(s.ratio * 100).toFixed(1))), backgroundColor: slots.map((s) => (s.ratio >= 0.5 ? css("--up") : css("--down"))) },
         ],
       },
       options: { scales: { y: pctAxis }, plugins: { legend: { display: false } } },
@@ -254,19 +256,19 @@
     const { rows, stats: st } = TM.buildComparison(slots, bn || empty, stepMs());
     const k = (label, v) => `<div class="kpi"><div class="label">${label}</div><div class="value">${v}</div></div>`;
     stats.innerHTML =
-      k("국내 매수 비율(당일)", pct(st.krBuyAvg)) +
-      (bn ? k("바이낸스 테이커 매수(장중 평균)", pct(st.bnTakerAvg)) + k("바이낸스 롱 계정(장중 평균)", pct(st.bnLongAvg)) +
-        k("같은 방향 비율", pct(st.agreeRate, 0)) + k("매수비율 상관계수", st.corrBuy === null ? "-" : st.corrBuy.toFixed(2)) +
-        k("등락률 상관계수", st.corrChg === null ? "-" : st.corrChg.toFixed(2)) : "");
+      k(T("국내 매수 비율(당일)", "Korea buy ratio (day)"), pct(st.krBuyAvg)) +
+      (bn ? k(T("바이낸스 테이커 매수(장중 평균)", "Binance taker buy (session avg)"), pct(st.bnTakerAvg)) + k(T("바이낸스 롱 계정(장중 평균)", "Binance long accounts (session avg)"), pct(st.bnLongAvg)) +
+        k(T("같은 방향 비율", "Same-direction rate"), pct(st.agreeRate, 0)) + k(T("매수비율 상관계수", "Buy-ratio correlation"), st.corrBuy === null ? "-" : st.corrBuy.toFixed(2)) +
+        k(T("등락률 상관계수", "Price-change correlation"), st.corrChg === null ? "-" : st.corrChg.toFixed(2)) : "");
 
-    const head = `<tr><th>시간</th><th>국내가</th><th>국내 등락</th><th>국내 매수%</th><th>거래량</th>` +
-      (bn ? `<th>바이낸스가</th><th>바이낸스 등락</th><th>테이커 매수%</th><th>롱 계정%</th><th>상위 롱%</th><th>판정</th>` : "") + `</tr>`;
+    const head = T(`<tr><th>시간</th><th>국내가</th><th>국내 등락</th><th>국내 매수%</th><th>거래량</th>`, `<tr><th>Time</th><th>KR price</th><th>KR chg</th><th>KR buy%</th><th>Volume</th>`) +
+      (bn ? T(`<th>바이낸스가</th><th>바이낸스 등락</th><th>테이커 매수%</th><th>롱 계정%</th><th>상위 롱%</th><th>판정</th>`, `<th>Binance price</th><th>Binance chg</th><th>Taker buy%</th><th>Long acct%</th><th>Top long%</th><th>Verdict</th>`) : "") + `</tr>`;
     const body = rows.slice().reverse().map((r) =>
       `<tr><td>${r.time}</td><td>${num(r.krClose)}</td><td class="${signCls(r.krChg)}">${sPct(r.krChg)}</td>` +
       `<td class="${r.krBuy >= 0.5 ? "pos" : "neg"}">${pct(r.krBuy)}</td><td>${num(r.krVol)}</td>` +
       (bn ? `<td>${num(r.bnClose, 2)}</td><td class="${signCls(r.bnChg)}">${sPct(r.bnChg)}</td>` +
         `<td class="${r.bnTaker >= 0.5 ? "pos" : "neg"}">${pct(r.bnTaker)}</td><td>${pct(r.bnLong)}</td><td>${pct(r.bnTop)}</td>` +
-        `<td class="${r.verdict || ""}">${r.verdict === "agree" ? "같은 방향" : r.verdict === "diverge" ? "엇갈림" : "-"}</td>` : "") +
+        `<td class="${r.verdict || ""}">${r.verdict === "agree" ? T("같은 방향", "Same") : r.verdict === "diverge" ? T("엇갈림", "Diverging") : "-"}</td>` : "") +
       `</tr>`).join("");
     table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
   }
@@ -275,7 +277,7 @@
   function renderFlow(inv) {
     const table = $("flowTable");
     if (!inv || inv.error || !inv.rows || !inv.rows.length) {
-      table.innerHTML = `<tbody><tr><td>수급 데이터를 불러오지 못했습니다${inv && inv.error ? ": " + inv.error : ""}</td></tr></tbody>`;
+      table.innerHTML = `<tbody><tr><td>${T("수급 데이터를 불러오지 못했습니다", "Could not load flow data")}${inv && inv.error ? ": " + inv.error : ""}</td></tr></tbody>`;
       if (state.charts.flowChart) state.charts.flowChart.destroy();
       return;
     }
@@ -285,21 +287,21 @@
       data: {
         labels: rows.map((r) => fmtDate(r.date).slice(5)),
         datasets: [
-          { label: "개인" + (inv.rows[0].approx ? " (추정)" : ""), data: rows.map((r) => r.individual), backgroundColor: "#f59e0b" },
-          { label: "외국인", data: rows.map((r) => r.foreign), backgroundColor: "#16c784" },
-          { label: "기관", data: rows.map((r) => r.institution), backgroundColor: "#8b5cf6" },
+          { label: T("개인", "Retail") + (inv.rows[0].approx ? T(" (추정)", " (est.)") : ""), data: rows.map((r) => r.individual), backgroundColor: "#f59e0b" },
+          { label: T("외국인", "Foreign"), data: rows.map((r) => r.foreign), backgroundColor: "#16c784" },
+          { label: T("기관", "Institutional"), data: rows.map((r) => r.institution), backgroundColor: "#8b5cf6" },
         ],
       },
       options: { scales: { y: { ticks: { callback: (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(1) + "M" : Math.abs(v) >= 1e3 ? (v / 1e3).toFixed(0) + "K" : v) } } } },
     });
     const sum = (k) => rows.reduce((a, r) => a + (r[k] || 0), 0);
     table.innerHTML =
-      `<thead><tr><th>날짜</th><th>종가</th><th>개인</th><th>외국인</th><th>기관</th><th>외국인 보유율</th></tr></thead><tbody>` +
+      T(`<thead><tr><th>날짜</th><th>종가</th><th>개인</th><th>외국인</th><th>기관</th><th>외국인 보유율</th></tr></thead><tbody>`, `<thead><tr><th>Date</th><th>Close</th><th>Retail</th><th>Foreign</th><th>Institutional</th><th>Foreign ownership</th></tr></thead><tbody>`) +
       rows.slice().reverse().map((r) =>
         `<tr><td>${fmtDate(r.date)}</td><td>${num(r.close)}</td><td class="${signCls(r.individual)}">${num(r.individual)}</td>` +
         `<td class="${signCls(r.foreign)}">${num(r.foreign)}</td><td class="${signCls(r.institution)}">${num(r.institution)}</td>` +
         `<td>${r.foreignHoldRatio === null ? "-" : r.foreignHoldRatio.toFixed(2) + "%"}</td></tr>`).join("") +
-      `<tr class="sum"><td>${rows.length}일 합계</td><td></td><td class="${signCls(sum("individual"))}">${num(sum("individual"))}</td>` +
+      `<tr class="sum"><td>${T(`${rows.length}일 합계`, `${rows.length}-day total`)}</td><td></td><td class="${signCls(sum("individual"))}">${num(sum("individual"))}</td>` +
       `<td class="${signCls(sum("foreign"))}">${num(sum("foreign"))}</td><td class="${signCls(sum("institution"))}">${num(sum("institution"))}</td><td></td></tr></tbody>`;
   }
 
@@ -308,11 +310,11 @@
     $("summaryGrid").innerHTML = SYMBOLS.map((s, i) => {
       const m = state.summaries[i] || {};
       return `<div class="summary-card" data-i="${i}">
-        <h3>${s.name} <span class="sub">${s.bnResolved || "바이낸스 미상장"}</span></h3>
-        <div class="row"><span>국내 등락</span><b class="${signCls(m.krChg)}">${sPct(m.krChg)}</b></div>
-        <div class="row"><span>국내 매수 비율</span><b>${pct(m.krBuy)}</b></div>
-        <div class="row"><span>바이낸스 롱 계정</span><b>${pct(m.bnLong)}</b></div>
-        <div class="row"><span>테이커 매수</span><b>${pct(m.bnTaker)}</b></div>
+        <h3>${s.name} <span class="sub">${s.bnResolved || T("바이낸스 미상장", "Not on Binance")}</span></h3>
+        <div class="row"><span>${T("국내 등락", "KR change")}</span><b class="${signCls(m.krChg)}">${sPct(m.krChg)}</b></div>
+        <div class="row"><span>${T("국내 매수 비율", "KR buy ratio")}</span><b>${pct(m.krBuy)}</b></div>
+        <div class="row"><span>${T("바이낸스 롱 계정", "Binance long accts")}</span><b>${pct(m.bnLong)}</b></div>
+        <div class="row"><span>${T("테이커 매수", "Taker buy")}</span><b>${pct(m.bnTaker)}</b></div>
       </div>`;
     }).join("");
     $("summaryGrid").querySelectorAll(".summary-card").forEach((el) => el.addEventListener("click", () => select(+el.dataset.i)));
@@ -367,12 +369,12 @@
     renderKr(sym, kr, slots);
     renderComparison(sym, slots, bn);
     renderFlow(inv);
-    $("lastUpdated").textContent = new Date().toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour12: false });
+    $("lastUpdated").textContent = new Date().toLocaleTimeString(LOC, { timeZone: "Asia/Seoul", hour12: false });
     if (window.TMRefresh) $("refreshMode").textContent = window.TMRefresh.label();
   }
 
   function applyStep() {
-    document.querySelectorAll(".stepTxt").forEach((el) => (el.textContent = state.step + "분"));
+    document.querySelectorAll(".stepTxt").forEach((el) => (el.textContent = state.step + T("분", "-min")));
     $("bnStepNote").hidden = state.step !== 1;
     $("stepSeg").querySelectorAll(".seg-btn").forEach((b) => b.classList.toggle("active", +b.dataset.step === state.step));
   }
