@@ -308,3 +308,17 @@ table.data .weak { opacity: .7; }
 .lang-switch a { color: var(--muted); padding: 3px 6px; border-radius: 6px; text-decoration: none; }
 .lang-switch a.on { color: #111; background: var(--accent); }
 @media (max-width: 640px) { .lang-switch { margin-left: 4px; } .lang-switch a { padding: 2px 4px; } }
+
+/* 헤더 2줄: 1줄 로고 · KO|EN · 🔔 / 2줄 메뉴 */
+.header-inner { flex-wrap: wrap; height: auto; min-height: 0; padding-top: 10px; padding-bottom: 0; row-gap: 6px; }
+.header-inner .logo { order: 1; margin-right: auto; }
+.header-inner .lang-switch { order: 2; margin-left: 0; }
+.header-inner .ntf { order: 3; margin-left: 10px; }
+.site-header nav { order: 4; flex: 1 0 100%; margin-left: 0; display: flex; gap: 22px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 8px; -webkit-mask-image: none; mask-image: none; }
+.site-header nav::-webkit-scrollbar { display: none; }
+.site-header nav a { margin: 0; }
+@media (max-width: 640px) {
+  .header-inner { padding-top: 8px; row-gap: 4px; }
+  .site-header nav { gap: 16px; padding-bottom: 6px; }
+  .site-header nav a { font-size: 14px; }
+}
