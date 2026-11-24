@@ -131,7 +131,9 @@
           <div class="ntf-row">
             <button type="button" class="tab" id="ntfPushBtn" ${!pushSupported ? "disabled" : ""}>이 기기에서 푸시 받기</button>
             <button type="button" class="tab" id="ntfPushTest" hidden>푸시 테스트</button>
+            <button type="button" class="tab" id="ntfDiag" ${!pushSupported ? "disabled" : ""}>알림 진단</button>
           </div>
+          <div class="ntf-diag" id="ntfDiagOut" hidden></div>
         </div>
         ${tabSupported ? `<div class="ntf-sec">
           <div class="ntf-row ntf-top"><b>💻 PC 탭 알림</b><label class="ntf-switch"><input type="checkbox" id="ntfOn"> 켜기</label></div>
@@ -194,6 +196,35 @@
         msg(r.ok ? "보냈습니다. 몇 초 안에 알림이 와야 합니다." : "실패: " + (r.error || r.status));
       } catch (e) { msg("실패: " + (e.message || e)); }
     });
+    // 진단: 서버를 거치지 않고 서비스 워커가 직접 알림을 띄워 봄 → 표시 경로 확인 + 상태 요약
+    $("ntfDiag").addEventListener("click", async () => {
+      const out = $("ntfDiagOut");
+      const L = [];
+      const b = /Edg\//.test(UA) ? "Edge" : /Whale\//.test(UA) ? "Whale" : /SamsungBrowser/.test(UA) ? "삼성 인터넷" : /Firefox\//.test(UA) ? "Firefox" : /Chrome\//.test(UA) ? "Chrome" : /Safari\//.test(UA) ? "Safari" : "기타";
+      L.push(`브라우저: ${b}${isIOS ? (standalone ? " (홈 화면 앱)" : " (사파리 탭)") : ""}`);
+      L.push(`알림 권한: ${"Notification" in window ? Notification.permission : "없음"}`);
+      let reg = null, sub = null;
+      try { reg = await navigator.serviceWorker.getRegistration(BASE); } catch (_) {}
+      L.push(`서비스 워커: ${reg && reg.active ? "동작 중" : reg ? "설치 중" : "없음"}`);
+      try { sub = reg ? await reg.pushManager.getSubscription() : null; } catch (_) {}
+      L.push(`푸시 등록: ${sub ? "있음 (" + new URL(sub.endpoint).host + ")" : "없음"}`);
+      let shown = "건너뜀";
+      if (reg && granted()) {
+        try {
+          await reg.showNotification("알림 진단 (서버 없이 직접)", { body: "이 알림이 보이면 이 기기의 알림 표시는 정상입니다.", tag: "diag", icon: BASE + "icons/icon-192.png" });
+          const list = await reg.getNotifications({ tag: "diag" });
+          shown = list.length ? "브라우저가 띄움" : "브라우저가 띄우지 못함";
+        } catch (e) { shown = "실패: " + (e.message || e); }
+      }
+      L.push(`직접 알림: ${shown}`);
+      if (sub) {
+        try { const r = await post("test", { endpoint: sub.endpoint }); L.push(`서버 푸시: ${r.ok ? "전송 성공 (" + r.status + ")" : "실패 " + (r.error || r.status)}`); } catch (e) { L.push("서버 푸시: 요청 실패"); }
+      }
+      L.push("→ '직접 알림'이 화면에 안 보이면 윈도우/휴대폰의 알림 설정 문제, 직접 알림은 보이는데 서버 푸시만 안 오면 푸시 수신 문제입니다.");
+      out.hidden = false;
+      out.innerHTML = L.map((x) => `<div>${x}</div>`).join("");
+    });
+
     if ($("ntfOn")) $("ntfOn").addEventListener("change", async (e) => {
       const c = cfg();
       if (e.target.checked) {

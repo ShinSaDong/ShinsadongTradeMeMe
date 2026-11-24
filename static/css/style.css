@@ -301,3 +301,4 @@ table.data .weak { opacity: .7; }
   .ntf-btn { padding: 3px 8px; font-size: 12px; }
   .ntf-panel { position: fixed; left: 8px; right: 8px; top: 58px; width: auto; max-width: none; max-height: calc(100vh - 70px); overflow-y: auto; }
 }
+.ntf-diag { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: 12px; line-height: 1.6; margin-top: 6px; }
