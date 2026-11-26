@@ -6,6 +6,7 @@
   <li>
     <a href="{{ .RelPermalink }}">{{ .Title }}</a>
     <time>{{ .Date.Format "2006-01-02" }}</time>
+    <span class="views" data-views="{{ .RelPermalink }}" hidden>{{ partial "eye.html" . }}<span class="n"></span></span>
     <p>{{ with .Description }}{{ . }}{{ else }}{{ .Summary | plainify | truncate 120 }}{{ end }}</p>
   </li>
   {{ end }}

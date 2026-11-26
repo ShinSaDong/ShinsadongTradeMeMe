@@ -26,6 +26,8 @@ export class FlowStore extends DurableObject {
       id TEXT PRIMARY KEY, endpoint TEXT NOT NULL, p256dh TEXT NOT NULL, auth TEXT NOT NULL,
       cfg TEXT NOT NULL, state TEXT, created INTEGER NOT NULL
     )`);
+    // 방문자·조회수: path = "__visits"(사이트 전체 방문) 또는 "/posts/<slug>/"
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS hits (path TEXT PRIMARY KEY, n INTEGER NOT NULL DEFAULT 0)`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS daily (
       day TEXT PRIMARY KEY,
       data TEXT NOT NULL
@@ -145,5 +147,21 @@ export class FlowStore extends DurableObject {
 
   days(limit = 20) {
     return this.sql.exec("SELECT day, COUNT(*) AS n FROM snap GROUP BY day ORDER BY day DESC LIMIT ?", limit).toArray();
+  }
+
+  // ---------- 방문자·조회수 ----------
+  hit(path, visit) {
+    const inc = (k) => this.sql.exec("INSERT INTO hits (path, n) VALUES (?, 1) ON CONFLICT(path) DO UPDATE SET n = n + 1", k);
+    if (visit) inc("__visits");
+    if (path) inc(path);
+    return this.views(path ? [path] : []);
+  }
+
+  views(paths) {
+    const keys = ["__visits", ...paths];
+    const out = { total: 0, views: {} };
+    const rows = this.sql.exec(`SELECT path, n FROM hits WHERE path IN (${keys.map(() => "?").join(",")})`, ...keys).toArray();
+    for (const r of rows) { if (r.path === "__visits") out.total = r.n; else out.views[r.path] = r.n; }
+    return out;
   }
 }

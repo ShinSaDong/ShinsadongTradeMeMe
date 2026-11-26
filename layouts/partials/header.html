@@ -7,6 +7,7 @@
       {{ $href := .URL }}
       <a href="{{ $href }}" {{ if hasPrefix $current.RelPermalink $href }}{{ if or (ne $href "/") (eq $current.RelPermalink "/") }}class="active"{{ end }}{{ end }}>{{ .Name }}</a>
       {{ end }}
+      <span class="nav-visits" data-visits hidden>{{ partial "eye.html" . }}<span class="n"></span></span>
     </nav>
     <div class="lang-switch" aria-label="Language">
       {{ $page := . }}

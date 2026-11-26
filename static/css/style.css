@@ -322,3 +322,20 @@ table.data .weak { opacity: .7; }
   .site-header nav { gap: 16px; padding-bottom: 6px; }
   .site-header nav a { font-size: 14px; }
 }
+
+/* 방문자·조회수 (눈 아이콘) */
+.eye { vertical-align: -2px; margin-right: 3px; }
+.nav-visits { margin-left: auto; flex: none; display: inline-flex; align-items: center; color: var(--muted); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nav-visits[hidden], .views[hidden] { display: none; }
+.views { color: var(--muted); font-size: 13px; margin-left: 10px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.post-meta { display: flex; align-items: center; flex-wrap: wrap; }
+.post-meta .views { font-size: 14px; }
+
+/* 단타: 모바일에서 목록 표가 화면 밖으로 밀리지 않게 */
+.sc-grid > * { min-width: 0; }
+@media (max-width: 900px) { .sc-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+  .sc-table th, .sc-table td { padding: 6px 4px; font-size: 12px; }
+  .sc-table td.nm { min-width: 0; white-space: normal; word-break: keep-all; }
+  .sc-table td.nm .sub { font-size: 10px; }
+}

@@ -1,7 +1,7 @@
 {{ define "main" }}
 <article class="post">
   <h1>{{ .Title }}</h1>
-  {{ if eq .Section "posts" }}<time class="post-date">{{ .Date.Format "2006-01-02" }}</time>{{ end }}
+  {{ if eq .Section "posts" }}<div class="post-meta"><time class="post-date">{{ .Date.Format "2006-01-02" }}</time> <span class="views" data-views="{{ .RelPermalink }}" data-self hidden>{{ partial "eye.html" . }}<span class="n"></span></span></div>{{ end }}
   {{ partial "ad.html" . }}
   <div class="post-body">{{ .Content }}</div>
   {{ partial "ad.html" . }}

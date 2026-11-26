@@ -45,6 +45,7 @@
   {{ partial "footer.html" . }}
   {{ block "scripts" . }}{{ end }}
   {{ with site.Params.cfBeaconToken }}<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "{{ . }}"}'></script>{{ end }}
+  <script src="{{ "js/views.js" | relURL }}" data-mode="{{ site.Params.krDataMode | default "api" }}"></script>
   <script src="{{ "js/notify.js" | relURL }}" data-base="{{ "" | relURL }}" data-guide="{{ "posts/2026-11-23-push-alert-guide/" | relLangURL }}" data-mode="{{ site.Params.krDataMode | default "api" }}"></script>
 </body>
 </html>
