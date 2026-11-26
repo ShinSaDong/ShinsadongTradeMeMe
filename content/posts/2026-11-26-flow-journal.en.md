@@ -41,6 +41,13 @@ tags: ["flow journal", "KOSPI", "foreign investors", "institutions", "base rate"
 - **Around 10 a.m., the BOK hiked:** the Monetary Policy Board raised the base rate **from 3.00% to 3.25%** — its first move in three months after back-to-back hikes in July and August and a hold in October. In the six-month rate outlook (dot plot), **eight dots sat at 3.50% and seven at 3.75%**, signaling one or two more hikes.
 - **Afternoon:** foreign buying faded into net selling (−₩113.7B at the close), and the index gave back most of its gains. Of yesterday's 308.52-point drop, only 13.70 points — **less than 5%** — came back.
 
+## After the close: with the US shut, the after-market went still
+
+- With Wall Street closed tonight for Thanksgiving, **neither foreigners nor individuals had any indicator to trade on** during the 4–8 p.m. after-market. Normally, once US pre-market opens at 6 p.m. Seoul time, Korean prices swing with Nasdaq futures — tonight that signal simply wasn't there.
+- As a result, after-hours trading **ended with barely a move, close to the regular-session close.**
+
+**My view:** The fact that the after-market went this quiet on a US holiday is, in reverse, evidence that most of the usual after-hours movement **comes from offshore signals — above all the 24-hour Binance Korean-stock perpetuals.** Binance and the Korean market are now inevitably intertwined. From here I'll compare the long/short ratios and prices of Binance's Samsung and SK hynix perps against the Korean after-market and the next day's open, **time slot by time slot, in more detail.** You can follow both side by side in 5-minute intervals on this site's [Dashboard](/dashboard/).
+
 ## Interpretation
 
 **1. A bounce without a buyer.** Only institutions (mainly brokerages) bought, ₩750B. Foreigners bought in the morning and sold in the afternoon. Not nearly enough to undo a 6% one-day drop.
