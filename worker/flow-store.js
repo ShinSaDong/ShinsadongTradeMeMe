@@ -4,6 +4,7 @@ import { DurableObject } from "cloudflare:workers";
 import { generateVapid, sendPush } from "../lib/webpush.js";
 import AlertEngine from "../static/js/alert-engine.js";
 import Flow from "../static/js/flow-engine.js";
+import { HIT_SEED } from "../lib/hit-seed.js";
 
 const PUSH_SUBJECT = "https://shinsadongtradememe.com";
 const MAX_SUBS = 300;
@@ -28,6 +29,7 @@ export class FlowStore extends DurableObject {
     )`);
     // 방문자·조회수: path = "__visits"(사이트 전체 방문) 또는 "/posts/<slug>/"
     this.sql.exec(`CREATE TABLE IF NOT EXISTS hits (path TEXT PRIMARY KEY, n INTEGER NOT NULL DEFAULT 0)`);
+    this.seedHits();
     this.sql.exec(`CREATE TABLE IF NOT EXISTS daily (
       day TEXT PRIMARY KEY,
       data TEXT NOT NULL
@@ -150,6 +152,18 @@ export class FlowStore extends DurableObject {
   }
 
   // ---------- 방문자·조회수 ----------
+  // 카운터 이전 기록(Cloudflare Web Analytics)을 버전마다 한 번만 더함
+  seedHits() {
+    const done = this.sql.exec("SELECT v FROM kv WHERE k = 'hits_seed'").toArray()[0];
+    if (done && done.v === HIT_SEED.version) return;
+    this.ctx.storage.transactionSync(() => {
+      for (const [k, n] of Object.entries(HIT_SEED.values)) {
+        this.sql.exec("INSERT INTO hits (path, n) VALUES (?, ?) ON CONFLICT(path) DO UPDATE SET n = n + excluded.n", k, n);
+      }
+      this.sql.exec("INSERT OR REPLACE INTO kv (k, v) VALUES ('hits_seed', ?)", HIT_SEED.version);
+    });
+  }
+
   hit(path, visit) {
     const inc = (k) => this.sql.exec("INSERT INTO hits (path, n) VALUES (?, 1) ON CONFLICT(path) DO UPDATE SET n = n + 1", k);
     if (visit) inc("__visits");
