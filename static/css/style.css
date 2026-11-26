@@ -339,3 +339,19 @@ table.data .weak { opacity: .7; }
   .sc-table td.nm { min-width: 0; white-space: normal; word-break: keep-all; }
   .sc-table td.nm .sub { font-size: 10px; }
 }
+
+/* 단타: 신호 열까지 가로 스크롤 없이 한 화면에 보이게 */
+.sc-grid { grid-template-columns: minmax(380px, 520px) 1fr; }
+@media (max-width: 900px) { .sc-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+  .card.sc-list { padding: 12px 6px; }
+  .card.sc-list > h2, .card.sc-list > .sub { padding: 0 6px; }
+  .sc-table th:first-child, .sc-table td:first-child { display: none; }
+  .sc-table th:nth-child(2) { text-align: left; }
+  .sc-table th, .sc-table td { padding: 6px 2px; font-size: 11px; letter-spacing: -0.2px; }
+  .sc-table td.nm b { font-size: 12px; }
+  .sc-table td.nm { overflow-wrap: anywhere; word-break: normal; }
+  .sc-table td.nm .sub { white-space: nowrap; }
+  .sc-table th:last-child, .sc-table td:last-child { white-space: normal; text-align: center; }
+  .sc-table .badge.sm { white-space: normal; padding: 2px 5px; font-size: 10.5px; line-height: 1.25; word-break: keep-all; }
+}
