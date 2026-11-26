@@ -13,7 +13,9 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
+    // /api/* 와 HTML 페이지는 Worker 가 먼저 받음 (페이지는 방문 국가별 한/영 기본 언어 처리)
+    // 정적 파일(js, css, 이미지, 데이터)은 Worker 를 거치지 않고 바로 응답 → 무료 요청 한도 절약
+    "run_worker_first": ["/*", "!/js/*", "!/css/*", "!/images/*", "!/icons/*", "!/data/*", "!/*.*"]
   },
   "workers_dev": true,
   "routes": [

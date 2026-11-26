@@ -5,6 +5,7 @@
 import { handleKr, handleBinance, handleRank, handleFlow, handleMonth, handlePush } from "../lib/api.js";
 import { fetchSnapshot, inFlowWindow } from "../lib/flow.js";
 import { kstDateStr } from "../lib/naver.js";
+import { geoLangRedirect } from "../lib/geo-lang.js";
 export { FlowStore } from "./flow-store.js";
 
 const flowStore = (env) => (env.FLOW ? env.FLOW.get(env.FLOW.idFromName("main")) : null);
@@ -23,6 +24,8 @@ export default {
     if (pathname.startsWith("/api/")) {
       return new Response(JSON.stringify({ error: "not found" }), { status: 404, headers: { "content-type": "application/json" } });
     }
+    const redirect = await geoLangRedirect(request, env);
+    if (redirect) return redirect;
     return env.ASSETS.fetch(request);
   },
 
